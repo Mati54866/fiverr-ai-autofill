@@ -1,82 +1,299 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 280px;
-      background: #1a1a2e;
-      color: #e0e0e0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      padding: 18px;
-    }
-    h2 {
-      font-size: 14px;
-      color: #fff;
-      margin-bottom: 14px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    label {
-      font-size: 11px;
-      color: #90a4ae;
-      display: block;
-      margin-bottom: 5px;
-    }
-    input {
-      width: 100%;
-      background: #16213e;
-      border: 1px solid #0f3460;
-      border-radius: 7px;
-      color: #e0e0e0;
-      font-size: 12px;
-      padding: 8px 10px;
-      outline: none;
-      font-family: inherit;
-    }
-    input:focus { border-color: #1a73e8; }
-    button {
-      width: 100%;
-      margin-top: 12px;
-      background: linear-gradient(135deg, #1a73e8, #0d47a1);
-      border: none;
-      border-radius: 7px;
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px;
-      cursor: pointer;
-      font-family: inherit;
-    }
-    button:hover { opacity: 0.9; }
-    #status {
-      font-size: 11px;
-      text-align: center;
-      margin-top: 8px;
-      min-height: 14px;
-      color: #a5d6a7;
-    }
-    .hint {
-      font-size: 10.5px;
-      color: #546e7a;
-      margin-top: 10px;
-      line-height: 1.4;
-    }
-    a { color: #1a73e8; text-decoration: none; }
-  </style>
+<meta charset="UTF-8">
+<title>Gig AI Autofill</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 340px;
+  background: #0d0d0d;
+  color: #d4d4d4;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Header */
+.header {
+  padding: 14px 16px 13px;
+  background: linear-gradient(135deg, #0f1a0f 0%, #0d0d0d 100%);
+  border-bottom: 1px solid #1e1e1e;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #1a8a50, #0f5c34);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: #fff;
+  box-shadow: 0 2px 10px rgba(26, 138, 80, 0.4);
+  flex-shrink: 0;
+}
+.header-title { font-weight: 700; font-size: 14px; color: #fff; letter-spacing: -0.2px; }
+.header-sub   { font-size: 11px; color: #555; margin-top: 1px; }
+.status-pill {
+  display: flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  background: #0d1f0d; border: 1px solid #1a3f1a;
+  font-size: 11px; font-weight: 600; color: #4ade80;
+}
+.status-dot {
+  width: 6px; height: 6px; background: #4ade80;
+  border-radius: 50%; box-shadow: 0 0 4px #4ade80;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: #0d0d0d;
+  border-bottom: 1px solid #1e1e1e;
+  padding: 0 6px;
+}
+.tab {
+  flex: 1; padding: 10px 4px 9px;
+  cursor: pointer; font-size: 11.5px; color: #555;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s; text-align: center; user-select: none;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.tab-icon { font-size: 13px; line-height: 1; }
+.tab:hover { color: #999; }
+.tab.active { color: #1DBF73; border-bottom-color: #1DBF73; }
+
+/* Panels */
+.panel { display: none; padding: 12px 14px 14px; }
+.panel.active { display: block; }
+
+/* Card */
+.card {
+  background: #141414; border: 1px solid #1e1e1e;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+}
+.card:last-child { margin-bottom: 0; }
+.card-title {
+  font-size: 10.5px; font-weight: 700; color: #444;
+  text-transform: uppercase; letter-spacing: 0.9px; margin-bottom: 10px;
+}
+
+/* How to use steps */
+.steps { display: flex; flex-direction: column; gap: 8px; }
+.step { display: flex; align-items: flex-start; gap: 10px; }
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #1a2e1a; border: 1px solid #1DBF73;
+  color: #1DBF73; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-text { font-size: 12px; color: #888; line-height: 1.4; }
+.step-text strong { color: #c0c0c0; }
+
+/* Input */
+.field-label {
+  font-size: 11px; color: #4a4a4a; margin-bottom: 5px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.badge {
+  font-size: 10px; padding: 1px 7px; border-radius: 4px;
+  background: #1a1a1a; border: 1px solid #272727; color: #555;
+}
+.inp {
+  width: 100%; background: #111; border: 1px solid #272727;
+  border-radius: 7px; color: #e0e0e0; padding: 7px 10px;
+  font-size: 12.5px; outline: none; font-family: inherit; transition: border 0.15s;
+}
+.inp:focus { border-color: #1DBF73; }
+.inp::placeholder { color: #333; }
+
+/* Key row with eye */
+.key-row { position: relative; margin-bottom: 8px; }
+.key-row:last-of-type { margin-bottom: 0; }
+.eye-btn {
+  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #444; cursor: pointer;
+  font-size: 13px; padding: 2px; line-height: 1;
+}
+.eye-btn:hover { color: #888; }
+.key-row .inp { padding-right: 32px; }
+.key-status {
+  font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 4px;
+}
+.key-status.ok  { background: #0d1f0d; border: 1px solid #1a3f1a; color: #4ade80; }
+.key-status.err { background: #1f0d0d; border: 1px solid #3f1a1a; color: #f87171; }
+
+/* Save / test buttons */
+.btn-row { display: flex; gap: 7px; margin-top: 12px; }
+.btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.15s; border: none;
+}
+.btn-primary { background: #1DBF73; color: #fff; }
+.btn-primary:hover { background: #19a862; }
+.btn-secondary { background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; }
+.btn-secondary:hover { border-color: #444; color: #ddd; }
+
+/* Select */
+select.inp {
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23555'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+}
+
+/* Row */
+.row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px solid #1a1a1a;
+}
+.row:last-child { border-bottom: none; padding-bottom: 0; }
+.row:first-child { padding-top: 0; }
+.row-label { color: #c0c0c0; font-size: 12.5px; }
+.row-sub   { font-size: 11px; color: #444; margin-top: 2px; }
+
+/* Footer */
+.footer {
+  padding: 9px 16px; border-top: 1px solid #181818;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 11px; color: #333;
+}
+.footer a { color: #1DBF73; text-decoration: none; }
+.footer a:hover { text-decoration: underline; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+  background: #0d1f0d; border: 1px solid #1a4a1a; color: #4ade80;
+  border-radius: 8px; padding: 6px 16px; font-size: 12px; font-weight: 600;
+  opacity: 0; transition: opacity 0.18s; pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+.mt-10 { margin-top: 10px; }
+.mb-8  { margin-bottom: 8px; }
+</style>
 </head>
 <body>
-  <h2>⚡ Gig AI Autofill</h2>
-  <label>Groq API Key</label>
-  <input type="password" id="apiKey" placeholder="gsk_..." />
-  <button id="save">Save Key</button>
-  <div id="status"></div>
-  <p class="hint">
-    Get a free API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a><br>
-    The panel appears automatically on Fiverr gig create/edit pages.
-  </p>
-  <script src="popup.js"></script>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">✦</div>
+    <div>
+      <div class="header-title">Gig AI Autofill</div>
+      <div class="header-sub">Powered by Groq AI</div>
+    </div>
+  </div>
+  <div class="status-pill">
+    <span class="status-dot"></span>
+    <span>Active</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="guide">
+    <span class="tab-icon">◆</span>Guide
+  </div>
+  <div class="tab" data-tab="api">
+    <span class="tab-icon">▸</span>API Keys
+  </div>
+  <div class="tab" data-tab="model">
+    <span class="tab-icon">◈</span>Model
+  </div>
+</div>
+
+<!-- Guide -->
+<div class="panel active" id="tab-guide">
+  <div class="card">
+    <div class="card-title">How to Use</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Go to <strong>Fiverr → Create Gig</strong> — a keyword bar appears at the top</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Type your gig keywords e.g. <strong>ibkr bot, python, algo trading</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Click the <strong>◆ Generate</strong> buttons injected next to each field</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">Review content, fill dropdowns manually, then <strong>Save & Continue</strong></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pages Supported</div>
+    <div class="row"><div class="row-label">Overview</div><div style="color:#1DBF73;font-size:11px">Title + Tags</div></div>
+    <div class="row"><div class="row-label">Pricing</div><div style="color:#1DBF73;font-size:11px">Packages + Prices</div></div>
+    <div class="row"><div class="row-label">Description & FAQ</div><div style="color:#1DBF73;font-size:11px">Description + 5 FAQs</div></div>
+    <div class="row"><div class="row-label">Requirements</div><div style="color:#1DBF73;font-size:11px">Buyer Questions</div></div>
+  </div>
+</div>
+
+<!-- API Keys -->
+<div class="panel" id="tab-api">
+  <div class="card">
+    <div class="card-title">Groq API Keys</div>
+    <div class="row-sub mb-8">Up to 3 keys — auto-rotated on rate limit. <a href="https://console.groq.com" target="_blank" style="color:#1DBF73;text-decoration:none">Get free key →</a></div>
+
+    <div class="field-label"><span>Key 1</span><span class="key-status" id="ks1"></span></div>
+    <div class="key-row">
+      <input type="password" class="inp" id="k1" placeholder="gsk_...">
+      <button class="eye-btn" data-t="k1">◉</button>
+    </div>
+
+    <div class="field-label"><span>Key 2</span><span class="badge">optional</span></div>
+    <div class="key-row">
+      <input type="password" class="inp" id="k2" placeholder="gsk_...">
+      <button class="eye-btn" data-t="k2">◉</button>
+    </div>
+
+    <div class="field-label"><span>Key 3</span><span class="badge">optional</span></div>
+    <div class="key-row">
+      <input type="password" class="inp" id="k3" placeholder="gsk_...">
+      <button class="eye-btn" data-t="k3">◉</button>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="saveKeys">◆ Save Keys</button>
+      <button class="btn btn-secondary" id="testBtn">▸ Test</button>
+    </div>
+  </div>
+</div>
+
+<!-- Model -->
+<div class="panel" id="tab-model">
+  <div class="card">
+    <div class="card-title">Model</div>
+    <select class="inp" id="modelSelect">
+      <option value="llama-3.3-70b-versatile">Llama 3.3 70B — Recommended</option>
+      <option value="llama-3.1-8b-instant">Llama 3.1 8B — Fastest</option>
+      <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+      <option value="gemma2-9b-it">Gemma 2 9B</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-title">Temperature</div>
+    <div class="row-sub mb-8" style="color:#555;font-size:11px">Lower = focused output &nbsp;|&nbsp; Higher = more creative</div>
+    <input type="range" id="tempRange" min="0" max="10" value="7" step="1"
+      style="width:100%;accent-color:#1DBF73;cursor:pointer">
+    <div style="text-align:center;color:#888;font-size:12px;margin-top:6px" id="tempVal">0.7</div>
+    <button class="btn btn-primary mt-10" id="saveModel">◆ Save</button>
+  </div>
+</div>
+
+<div class="footer">
+  <span>Gig AI Autofill v1.0</span>
+  <a href="https://github.com/NadirAliOfficial/fiverr-ai-autofill" target="_blank">GitHub</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="popup.js"></script>
 </body>
 </html>

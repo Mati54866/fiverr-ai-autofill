@@ -125,7 +125,7 @@ function injectPage1() {
   );
   if (titleEl && !titleEl.dataset.faiDone) {
     titleEl.dataset.faiDone = '1';
-    const btn = makeBtn('⚡ Generate Title', async (kw) => {
+    const btn = makeBtn('◆ Generate Title', async (kw) => {
       setMsg('Generating title…', 'info');
       const text = await ask(`Keywords: ${kw}`,
         `Write a Fiverr gig title. The field already shows "I will" — write ONLY what comes after "I will". Do NOT include "I will".
@@ -148,7 +148,7 @@ Reply with ONLY the text, no quotes.`
   );
   if (tagEl && !tagEl.dataset.faiDone) {
     tagEl.dataset.faiDone = '1';
-    const btn = makeBtn('⚡ Generate Tags', async (kw) => {
+    const btn = makeBtn('◆ Generate Tags', async (kw) => {
       setMsg('Adding tags…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
         `Generate exactly 5 Fiverr search tags. lowercase, 1-3 words each, letters and numbers only, no special chars.
@@ -174,7 +174,7 @@ function injectPage2() {
   const anchor = nameFields[0].closest('table, div[class*="package"], section') || nameFields[0].closest('div');
   if (anchor && !anchor.dataset.faiDone) {
     anchor.dataset.faiDone = '1';
-    const btn = makeBtn('⚡ Generate All Packages', async (kw) => {
+    const btn = makeBtn('◆ Generate Packages', async (kw) => {
       setMsg('Generating packages…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
         `Create 3 Fiverr packages. Return ONLY valid JSON:
@@ -216,7 +216,7 @@ function injectPage3() {
 
   if (editor && toolbar && !toolbar.dataset.faiDone) {
     toolbar.dataset.faiDone = '1';
-    const btn = makeBtn('⚡ Generate Description', async (kw) => {
+    const btn = makeBtn('◆ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
       const data = await ask(`Keywords: ${kw}`,
         `Write a professional Fiverr gig description. Return ONLY valid JSON:
@@ -305,7 +305,7 @@ Be specific to: ${kw}. JSON only, no markdown.`
 
   if (faqHeading && !faqHeading.dataset.faiDone) {
     faqHeading.dataset.faiDone = '1';
-    const btn = makeBtn('⚡ Generate FAQs', async (kw) => {
+    const btn = makeBtn('◆ Generate FAQs', async (kw) => {
       setMsg('Generating FAQs…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
         `Write exactly 5 UNIQUE FAQs for a Fiverr gig about: ${kw}
@@ -404,7 +404,7 @@ function injectPage4() {
   if (!anchor || anchor.dataset.faiDone) return;
   anchor.dataset.faiDone = '1';
 
-  const btn = makeBtn('⚡ Generate Requirements', async (kw) => {
+  const btn = makeBtn('◆ Generate Requirements', async (kw) => {
     setMsg('Generating requirements…', 'info');
     const raw = await ask(`Keywords: ${kw}`,
       `Write 3 buyer requirement questions for a Fiverr gig about: ${kw}
@@ -500,8 +500,8 @@ function injectBar() {
   const bar = document.createElement('div');
   bar.id = 'fai-bar';
   bar.innerHTML = `
-    <span class="fai-logo">⚡ AI Fill</span>
-    <input id="fai-keywords" type="text" placeholder="Keywords: algo trading, mt5, python…" autocomplete="off" />
+    <span class="fai-logo"><span class="fai-logo-icon">✦</span> Gig AI</span>
+    <input id="fai-keywords" type="text" placeholder="Keywords: ibkr bot, python, algo trading…" autocomplete="off" />
     <span id="fai-msg"></span>
   `;
   document.body.prepend(bar);
