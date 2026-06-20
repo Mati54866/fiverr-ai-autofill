@@ -240,29 +240,19 @@ Why Choose Me:
 TARGET: 1000-1100 characters total. Count carefully — must be between 1000 and 1100 chars. Plain text only.`
       );
 
-      // Use execCommand to insert text — fires all native browser events Quill listens to
       editor.click();
       editor.focus();
-      await sleep(rand(200, 400));
+      await sleep(rand(200, 350));
 
-      // Select all and delete existing content
+      // Clear existing content
       document.execCommand('selectAll', false, null);
-      await sleep(rand(80, 150));
+      await sleep(rand(60, 120));
       document.execCommand('delete', false, null);
-      await sleep(rand(100, 200));
+      await sleep(rand(100, 180));
 
-      // Type the plain text naturally via execCommand
-      const lines = text.trim().split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i] !== '') {
-          document.execCommand('insertText', false, lines[i]);
-          await sleep(rand(30, 80));
-        }
-        if (i < lines.length - 1) {
-          document.execCommand('insertParagraph', false, null);
-          await sleep(rand(40, 100));
-        }
-      }
+      // Insert full text in one shot — avoids Quill paragraph-mode issues
+      document.execCommand('insertText', false, text.trim());
+      await sleep(rand(150, 250));
 
       setMsg('Description filled!', 'success');
     });
@@ -280,21 +270,22 @@ TARGET: 1000-1100 characters total. Count carefully — must be between 1000 and
     const btn = makeBtn('⚡ Generate FAQs', async (kw) => {
       setMsg('Generating FAQs…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
-        `Write 4 FAQs for a Fiverr gig. Return ONLY valid JSON array:
+        `Write 5 FAQs for a Fiverr gig. Return ONLY valid JSON array:
 [
-  { "question": "...", "answer": "1-2 sentence answer" },
-  { "question": "...", "answer": "1-2 sentence answer" },
-  { "question": "...", "answer": "1-2 sentence answer" },
-  { "question": "...", "answer": "1-2 sentence answer" }
+  { "question": "...", "answer": "..." },
+  { "question": "...", "answer": "..." },
+  { "question": "...", "answer": "..." },
+  { "question": "...", "answer": "..." },
+  { "question": "...", "answer": "..." }
 ]
-Cover: revisions policy, delivery time, tech/tools used, support.
-Answer max 280 characters each. JSON only.`
+Cover: revisions policy, delivery time, tech/tools used, source files, communication/support.
+Each answer must be under 270 characters. No duplicate questions. JSON only.`
       );
       let faqs;
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
       catch { throw new Error('Could not parse FAQs — try again'); }
 
-      for (let i = 0; i < faqs.length; i++) {
+      for (let i = 0; i < Math.min(faqs.length, 5); i++) {
         setMsg(`Adding FAQ ${i + 1}/4…`, 'info');
 
         // If no input is visible, click "+ Add FAQ" to open the form

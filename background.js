@@ -22,7 +22,7 @@ async function callWithKey(apiKey, prompt, systemPrompt) {
     body: JSON.stringify({
       model: MODEL,
       temperature: 0.7,
-      max_tokens: 2048,
+      max_tokens: 8000,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: prompt }
