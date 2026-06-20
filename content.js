@@ -329,37 +329,64 @@ Each answer under 265 characters, specific to the gig. JSON only.`
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
       catch { throw new Error('Could not parse FAQs — try again'); }
 
-      for (let i = 0; i < Math.min(faqs.length, 5); i++) {
-        setMsg(`Adding FAQ ${i + 1}/4…`, 'info');
-
-        // If no input is visible, click "+ Add FAQ" to open the form
-        let qEl = document.querySelector('input[placeholder*="Add a Question" i]');
-        if (!qEl) {
-          const addBtn = [...document.querySelectorAll('a, button, span, p')]
-            .find(el => /add faq/i.test(el.textContent.trim()));
-          if (!addBtn) { setMsg(`FAQ form not found after ${i} entries`, 'error'); break; }
-          addBtn.click();
-          await sleep(rand(700, 1000));
-          qEl = document.querySelector('input[placeholder*="Add a Question" i]');
+      // Poll until an element matching selector appears (or timeout)
+      async function waitFor(selector, timeout = 5000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          const el = document.querySelector(selector);
+          if (el && isVisible(el)) return el;
+          await sleep(200);
         }
+        return null;
+      }
 
-        const aEl = document.querySelector('textarea[placeholder*="Add an Answer" i]');
-        if (!qEl || !aEl) { setMsg(`FAQ inputs not found at entry ${i + 1}`, 'error'); break; }
+      // Poll until element matching selector is gone
+      async function waitGone(selector, timeout = 5000) {
+        const start = Date.now();
+        while (Date.now() - start < timeout) {
+          const el = document.querySelector(selector);
+          if (!el || !isVisible(el)) return true;
+          await sleep(200);
+        }
+        return false;
+      }
 
-        // Fill question and answer
+      function findAddFaqBtn() {
+        return [...document.querySelectorAll('a, button, span')]
+          .find(el => /^\+?\s*Add FAQ$/i.test(el.textContent.trim()) && isVisible(el));
+      }
+
+      for (let i = 0; i < Math.min(faqs.length, 5); i++) {
+        setMsg(`Adding FAQ ${i + 1}/5…`, 'info');
+
+        // Wait for form to be closed first (from previous Add click)
+        await waitGone('input[placeholder*="Add a Question" i]', 3000);
+        await sleep(rand(300, 500));
+
+        // Click "+ Add FAQ" to open the form
+        const addBtn = findAddFaqBtn();
+        if (!addBtn) { setMsg(`"+ Add FAQ" not found at entry ${i + 1}`, 'error'); break; }
+        addBtn.click();
+
+        // Wait for form inputs to appear
+        const qEl = await waitFor('input[placeholder*="Add a Question" i]', 5000);
+        const aEl = await waitFor('textarea[placeholder*="Add an Answer" i]', 5000);
+        if (!qEl || !aEl) { setMsg(`FAQ form didn't open at entry ${i + 1}`, 'error'); break; }
+
+        await sleep(rand(200, 400));
         await humanType(qEl, faqs[i].question);
         await humanDelay();
-        await humanType(aEl, faqs[i].answer.slice(0, 295));
+        await humanType(aEl, faqs[i].answer.slice(0, 265));
         await humanDelay();
 
-        // Click the "Add" button to save this FAQ
+        // Click "Add" to save
         const saveBtn = [...document.querySelectorAll('button')]
           .find(el => el.textContent.trim() === 'Add' && isVisible(el));
         if (!saveBtn) { setMsg(`"Add" button not found at FAQ ${i + 1}`, 'error'); break; }
         saveBtn.click();
-        await sleep(rand(800, 1200));
+        await sleep(rand(500, 800));
       }
-      setMsg('FAQs done!', 'success');
+      setMsg('All 5 FAQs added!', 'success');
     });
     faqHeading.after(btn);
   }
