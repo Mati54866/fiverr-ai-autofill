@@ -28,12 +28,20 @@ function setField(el, value) {
 async function typeTag(input, tag) {
   input.focus();
   setField(input, tag);
-  await sleep(150);
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, bubbles: true }));
-  input.dispatchEvent(new KeyboardEvent('keyup',  { key: 'Enter', keyCode: 13, bubbles: true }));
-  // also try comma
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: ',', keyCode: 188, bubbles: true }));
-  await sleep(300);
+  await sleep(200);
+  // Try Enter key (most common for tag inputs)
+  ['keydown', 'keypress', 'keyup'].forEach(evt =>
+    input.dispatchEvent(new KeyboardEvent(evt, { key: 'Enter', keyCode: 13, which: 13, bubbles: true }))
+  );
+  await sleep(250);
+  // If value is still in the input (tag wasn't accepted), try comma
+  if (input.value.trim()) {
+    ['keydown', 'keypress', 'keyup'].forEach(evt =>
+      input.dispatchEvent(new KeyboardEvent(evt, { key: ',', keyCode: 188, which: 188, bubbles: true }))
+    );
+    setField(input, '');
+    await sleep(250);
+  }
 }
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -75,22 +83,43 @@ const PAGE1 = {
     );
   },
 
-  // Positive keywords tag input — under "Search tags" / "Positive keywords" section
+  // Positive keywords tag input
   tagInput() {
-    // Fiverr renders tag inputs as plain inputs inside a tag container
-    const byLabel = [...document.querySelectorAll('input')].find(el => {
-      const section = el.closest('section, div[class*="tag"], div[class*="keyword"]');
-      return section && /positive|search tag/i.test(section.textContent);
-    });
-    if (byLabel) return byLabel;
+    // Strategy 1: find heading/label with "Positive keywords" text, then the nearest input
+    const allText = [...document.querySelectorAll('h3, h4, p, label, div, span')];
+    const heading = allText.find(el =>
+      el.children.length === 0 && /positive keywords/i.test(el.textContent.trim())
+    );
+    if (heading) {
+      // walk up to find a parent that contains an input
+      let node = heading;
+      for (let i = 0; i < 6; i++) {
+        node = node.parentElement;
+        if (!node) break;
+        const inp = node.querySelector('input');
+        if (inp && isVisible(inp)) return inp;
+      }
+    }
 
+    // Strategy 2: find the hint text "5 tags maximum" and walk up to the input
+    const hint = allText.find(el =>
+      /5 tags maximum/i.test(el.textContent) && el.children.length === 0
+    );
+    if (hint) {
+      let node = hint;
+      for (let i = 0; i < 5; i++) {
+        node = node.parentElement;
+        if (!node) break;
+        const inp = node.querySelector('input');
+        if (inp && isVisible(inp)) return inp;
+      }
+    }
+
+    // Strategy 3: placeholder / attribute fallback
     return (
       document.querySelector('input[placeholder*="positive" i]') ||
       document.querySelector('input[placeholder*="tag" i]') ||
-      // fallback: input that's NOT the title (not maxlength 80) and is visible
-      [...document.querySelectorAll('input[type="text"]')].find(el =>
-        el.maxLength !== 80 && isVisible(el) && !el.id?.includes('title')
-      )
+      document.querySelector('input[data-testid*="tag"]')
     );
   },
 
