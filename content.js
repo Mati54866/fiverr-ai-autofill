@@ -100,11 +100,20 @@ const PAGE1 = {
     setMsg('Generating title…', 'info');
     const text = await ask(
       `Keywords: ${kw}`,
-      `You are a top-rated Fiverr seller. Write ONE compelling gig title (max 80 chars).
-Must start with "I will". Be very specific, use action words, include main keyword naturally.
-Reply with ONLY the title, no quotes, no extra text.`
+      `You are a top-rated Fiverr seller writing a gig title.
+The field already shows "I will" — write ONLY what comes AFTER "I will" (do NOT include "I will").
+Rules:
+- Max 73 characters (because "I will " takes 7)
+- Strong action verb to start (build, develop, create, design, automate, code, etc.)
+- Be specific and descriptive — include the main service + tool/platform + outcome
+- No fluff, no generic phrases like "provide", "offer", "give you"
+Bad: create a trading bot
+Good: build a professional IBKR algo trading bot with Python and MT5 integration
+Reply with ONLY the text after "I will", no quotes, no extra text.`
     );
-    setField(el, text.replace(/^["']|["']$/g, '').trim().slice(0, 80));
+    // strip any accidental "I will" prefix the AI might still add
+    const clean = text.replace(/^["']|["']$/g, '').trim().replace(/^i will\s+/i, '').trim();
+    setField(el, clean.slice(0, 73));
   },
 
   async fillTags(kw) {
