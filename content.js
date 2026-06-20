@@ -4,104 +4,55 @@ let apiKey = '';
 chrome.storage.sync.get(['groqApiKey'], ({ groqApiKey }) => { apiKey = groqApiKey || ''; });
 chrome.storage.onChanged.addListener(c => { if (c.groqApiKey) apiKey = c.groqApiKey.newValue || ''; });
 
-// ── Anti-detection helpers ────────────────────────────────────────────────────
+// ── Anti-detection ────────────────────────────────────────────────────────────
 
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-function humanDelay() { return sleep(rand(400, 900)); }   // pause between fields
+function humanDelay() { return sleep(rand(400, 900)); }
 
-// Human-like typing: char by char with random delays, no instant value injection
 async function humanType(el, text) {
   el.focus();
-  await sleep(rand(80, 200));
-
-  // Clear existing value via native setter first (keyboard events alone don't clear React state)
+  await sleep(rand(80, 180));
   const proto = el.tagName === 'INPUT' ? HTMLInputElement.prototype : HTMLTextAreaElement.prototype;
   const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
   nativeSetter ? nativeSetter.call(el, '') : (el.value = '');
   el.dispatchEvent(new Event('input', { bubbles: true }));
-  await sleep(rand(60, 140));
-
+  await sleep(rand(40, 80));
   let current = '';
   for (const char of text) {
     current += char;
     nativeSetter ? nativeSetter.call(el, current) : (el.value = current);
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    await sleep(rand(18, 55));    // typing speed variation
-    if (Math.random() < 0.05) await sleep(rand(150, 400)); // occasional pause
+    await sleep(rand(18, 52));
+    if (Math.random() < 0.05) await sleep(rand(120, 350));
   }
-
   el.dispatchEvent(new Event('change', { bubbles: true }));
-  await sleep(rand(60, 140));
+  await sleep(rand(60, 130));
   el.dispatchEvent(new Event('blur', { bubbles: true }));
-  await sleep(rand(100, 250));
-}
-
-// For Quill/contenteditable rich editors
-async function humanTypeRich(el, text) {
-  el.click();
-  el.focus();
-  await sleep(rand(200, 400));
-  // Clear first
-  el.innerHTML = '<p><br></p>';
-  el.dispatchEvent(new Event('input', { bubbles: true }));
-  await sleep(rand(100, 200));
-  // Set content
-  el.innerHTML = text.split('\n').filter(Boolean).map(l => `<p>${l}</p>`).join('');
-  el.dispatchEvent(new InputEvent('input', { bubbles: true }));
-  el.dispatchEvent(new Event('change', { bubbles: true }));
-  await sleep(rand(200, 400));
 }
 
 async function typeTag(input, tag) {
   await humanType(input, tag);
-  await sleep(rand(150, 300));
+  await sleep(rand(150, 280));
   ['keydown', 'keypress', 'keyup'].forEach(e =>
     input.dispatchEvent(new KeyboardEvent(e, { key: 'Enter', keyCode: 13, which: 13, bubbles: true }))
   );
-  await sleep(rand(250, 500));
+  await sleep(rand(280, 500));
   if (input.value.trim()) {
     ['keydown', 'keypress', 'keyup'].forEach(e =>
       input.dispatchEvent(new KeyboardEvent(e, { key: ',', keyCode: 188, which: 188, bubbles: true }))
     );
-    const proto = HTMLInputElement.prototype;
-    const ns = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+    const ns = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
     ns ? ns.call(input, '') : (input.value = '');
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    await sleep(rand(200, 400));
+    await sleep(rand(200, 380));
   }
 }
 
-function getCurrentTab() {
-  // 1. Try URL param first
-  const urlTab = new URL(location.href).searchParams.get('tab');
-  if (urlTab) return urlTab.toLowerCase();
+// ── Groq ──────────────────────────────────────────────────────────────────────
 
-  // 2. Read the active step from Fiverr's breadcrumb
-  const steps = [...document.querySelectorAll('nav li, nav a, [class*="step"], [class*="tab"], [class*="wizard"]')];
-  const active = steps.find(el => {
-    const cls = el.className || '';
-    return /active|current|selected/i.test(cls) && el.textContent.trim();
-  });
-
-  if (active) {
-    const text = active.textContent.toLowerCase();
-    if (text.includes('overview') || text.includes('general'))    return 'general';
-    if (text.includes('pric'))                                     return 'pricing';
-    if (text.includes('description') || text.includes('faq'))     return 'description';
-    if (text.includes('requirement'))                              return 'requirements';
-    if (text.includes('gallery'))                                  return 'gallery';
-    if (text.includes('publish'))                                  return 'publish';
-  }
-
-  // 3. Detect by page content
-  if (document.querySelector('.ql-editor'))                        return 'description';
-  if (document.querySelector('textarea[placeholder*="I will"]') ||
-      document.querySelector('input[maxlength="80"]'))             return 'general';
-  if (document.querySelector('textarea[placeholder*="Name your package"]') ||
-      document.querySelector('textarea[placeholder*="Describe the details"]')) return 'pricing';
-
-  return 'general';
+function getKeywords() {
+  return (document.getElementById('fai-keywords')?.value || '').trim();
 }
 
 function setMsg(text, type = 'info') {
@@ -109,16 +60,17 @@ function setMsg(text, type = 'info') {
   if (el) { el.textContent = text; el.className = `fai-msg-${type}`; }
 }
 
-function setLoading(on) {
-  const btn = document.getElementById('fai-fill-all');
-  const spinner = document.getElementById('fai-spinner');
-  if (btn) btn.disabled = on;
-  if (spinner) spinner.style.display = on ? 'inline-block' : 'none';
-  document.querySelectorAll('.fai-field-btn').forEach(b => b.disabled = on);
-}
-
 function isVisible(el) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+}
+
+async function ask(prompt, system) {
+  const res = await chrome.runtime.sendMessage({
+    type: 'GROQ_REQUEST',
+    payload: { apiKey, prompt, systemPrompt: system }
+  });
+  if (res.error) throw new Error(res.error);
+  return res.result;
 }
 
 function findByNearbyText(selector, pattern, maxDepth = 6) {
@@ -135,375 +87,241 @@ function findByNearbyText(selector, pattern, maxDepth = 6) {
   return null;
 }
 
-// ── Groq ──────────────────────────────────────────────────────────────────────
+// ── Inline button factory ─────────────────────────────────────────────────────
 
-async function ask(prompt, system) {
-  const res = await chrome.runtime.sendMessage({
-    type: 'GROQ_REQUEST',
-    payload: { apiKey, prompt, systemPrompt: system }
-  });
-  if (res.error) throw new Error(res.error);
-  return res.result;
-}
-
-// ── Page 1: Overview (tab=general) ───────────────────────────────────────────
-
-const PAGE1 = {
-  titleInput() {
-    return (
-      document.querySelector('textarea[placeholder*="I will"]') ||
-      document.querySelector('input[placeholder*="I will"]') ||
-      document.querySelector('textarea[maxlength="80"]') ||
-      document.querySelector('input[maxlength="80"]')
-    );
-  },
-
-  tagInput() {
-    return (
-      findByNearbyText('input', /positive keywords/i) ||
-      findByNearbyText('input', /5 tags maximum/i) ||
-      document.querySelector('input[placeholder*="positive" i]') ||
-      document.querySelector('input[placeholder*="tag" i]')
-    );
-  },
-
-  async fillTitle(kw) {
-    const el = this.titleInput();
-    if (!el) throw new Error('Title field not found — are you on the Overview tab?');
-    setMsg('Generating title…', 'info');
-    const text = await ask(
-      `Keywords: ${kw}`,
-      `You are a top-rated Fiverr seller writing a gig title.
-The field already has "I will" shown — write ONLY what comes AFTER "I will". Do NOT include "I will".
-Rules:
-- Max 73 characters
-- Start with a strong action verb (build, develop, automate, design, create, code)
-- Specific: include main service + tool/platform/language + outcome
-- No filler words like "provide", "offer", "give you", "help you"
-Bad example: create a trading bot
-Good example: build a professional IBKR algorithmic trading bot using Python
-Reply with ONLY the text after "I will", no quotes, nothing else.`
-    );
-    const clean = text.replace(/^["']|["']$/g, '').trim().replace(/^i will\s+/i, '').trim();
-    await humanType(el, clean.slice(0, 73));
-  },
-
-  async fillTags(kw) {
-    const input = this.tagInput();
-    if (!input) throw new Error('Tag input not found — scroll down to Search tags section');
-    setMsg('Adding tags…', 'info');
-    const raw = await ask(
-      `Keywords: ${kw}`,
-      `Generate exactly 5 Fiverr search tags for this gig.
-Rules: lowercase only, 1-3 words each, letters and numbers only (no special chars), no duplicates.
-Return ONLY a comma-separated list of 5 tags, nothing else.
-Example: algo trading, mt5 bot, python trading, expert advisor, automated trading`
-    );
-    const tags = raw.split(',').map(t => t.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '')).filter(Boolean).slice(0, 5);
-    for (const tag of tags) {
-      await typeTag(input, tag);
-      await humanDelay();
-    }
-  },
-
-  async fillAll(kw) {
-    await this.fillTitle(kw);
-    await humanDelay();
-    await this.fillTags(kw);
-    setMsg('Page 1 done — select Category manually, then Save & Continue', 'success');
-  }
-};
-
-// ── Page 2: Scope & Pricing (tab=pricing) ────────────────────────────────────
-
-const PAGE2 = {
-  // Returns [basic, standard, premium] textareas for a given placeholder
-  packageFields(placeholder) {
-    return [...document.querySelectorAll(`textarea[placeholder*="${placeholder}"]`)].slice(0, 3);
-  },
-
-  priceInputs() {
-    // Price row: inputs near a "$" label
-    const allInputs = [...document.querySelectorAll('input[type="text"], input[type="number"], input:not([type])')];
-    // Filter: visible, numeric-looking, no placeholder or numeric placeholder
-    return allInputs.filter(el => {
-      if (!isVisible(el)) return false;
-      const ph = (el.placeholder || '').toLowerCase();
-      const prev = el.previousElementSibling?.textContent?.trim();
-      const parent = el.parentElement?.textContent?.trim();
-      return (
-        parent?.includes('$') ||
-        prev === '$' ||
-        ph.includes('price') ||
-        el.type === 'number'
-      );
-    }).slice(0, 3);
-  },
-
-  async fillAll(kw) {
-    setMsg('Generating packages…', 'info');
-    const raw = await ask(
-      `Keywords: ${kw}`,
-      `You are a top-rated Fiverr seller. Create 3 pricing packages. Return ONLY valid JSON:
-{
-  "basic":    { "name": "Basic",    "description": "...", "price": 30  },
-  "standard": { "name": "Standard", "description": "...", "price": 75  },
-  "premium":  { "name": "Premium",  "description": "...", "price": 150 }
-}
-Description rules:
-- AIM for 65-90 characters — not less, not more than 99
-- One sentence, mention what is included (features, support level, scope)
-- Be specific to the gig, not generic
-- Example (85 chars): "Basic IBKR bot setup with entry/exit logic, backtesting, and email support included"
-Prices must be realistic for: ${kw}. No markdown, no explanation, only the JSON object.`
-    );
-
-    let pkgs;
-    try {
-      pkgs = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]);
-    } catch { throw new Error('Could not parse package data — try again'); }
-
-    const tiers = ['basic', 'standard', 'premium'];
-    const nameFields = this.packageFields('Name your package');
-    const descFields = this.packageFields('Describe the details');
-    const priceFields = this.priceInputs();
-
-    for (let i = 0; i < 3; i++) {
-      const pkg = pkgs[tiers[i]];
-      if (!pkg) continue;
-
-      if (nameFields[i]) {
-        setMsg(`Filling ${tiers[i]} package…`, 'info');
-        await humanType(nameFields[i], pkg.name);
-        await humanDelay();
-      }
-      if (descFields[i]) {
-        const desc = pkg.description.trim().slice(0, 99);
-        await humanType(descFields[i], desc);
-        await humanDelay();
-      }
-      if (priceFields[i]) {
-        await humanType(priceFields[i], String(pkg.price));
-        await humanDelay();
-      }
-    }
-
-    setMsg('Packages filled — set Delivery Time manually, then Save & Continue', 'success');
-  }
-};
-
-// ── Page 3: Description & FAQ (tab=description) ───────────────────────────────
-
-const PAGE3 = {
-  descEditor() {
-    return document.querySelector('.ql-editor[contenteditable="true"]');
-  },
-
-  addFaqBtn() {
-    return [...document.querySelectorAll('a, button, span')].find(el =>
-      /^\+?\s*Add FAQ$/i.test(el.textContent.trim())
-    );
-  },
-
-  async fillDescription(kw) {
-    const el = this.descEditor();
-    if (!el) throw new Error('Description editor not found — are you on the Description & FAQ tab?');
-    setMsg('Generating description…', 'info');
-    const text = await ask(
-      `Keywords: ${kw}`,
-      `You are a top-rated Fiverr seller. Write a professional gig description (max 1100 characters).
-Structure:
-- Opening hook: 1-2 sentences on the value you deliver
-- What's included: 4-6 bullet points starting with ✅
-- Why choose me: 2-3 short sentences (experience, quality, support)
-- Call to action: 1 sentence
-Use plain text only. No markdown headers. Keep total under 1100 characters.`
-    );
-    await humanTypeRich(el, text.slice(0, 1100));
-  },
-
-  async fillFAQs(kw) {
-    setMsg('Generating FAQs…', 'info');
-    const raw = await ask(
-      `Keywords: ${kw}`,
-      `Write 4 FAQ entries for a Fiverr gig. Return ONLY a valid JSON array:
-[
-  { "question": "short question?", "answer": "1-2 sentence answer" },
-  { "question": "short question?", "answer": "1-2 sentence answer" },
-  { "question": "short question?", "answer": "1-2 sentence answer" },
-  { "question": "short question?", "answer": "1-2 sentence answer" }
-]
-Cover: revisions policy, delivery time, tech stack used, communication/support. JSON only.`
-    );
-
-    let faqs;
-    try {
-      faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]);
-    } catch { throw new Error('Could not parse FAQs — try again'); }
-
-    for (let i = 0; i < faqs.length; i++) {
-      const faq = faqs[i];
-
-      // Click "+ Add FAQ" to reveal a new row
-      const addBtn = this.addFaqBtn();
-      if (!addBtn) { setMsg(`Only ${i} FAQs added — "+ Add FAQ" not found`, 'error'); break; }
-      addBtn.click();
-      await sleep(rand(600, 1000));
-
-      // Grab the last question/answer pair that appeared
-      const qInputs = [...document.querySelectorAll('input[placeholder*="question" i], input[placeholder*="Question"]')];
-      const aInputs = [...document.querySelectorAll('textarea[placeholder*="answer" i], textarea[placeholder*="Answer"]')];
-      const qEl = qInputs[qInputs.length - 1];
-      const aEl = aInputs[aInputs.length - 1];
-
-      if (qEl) { await humanType(qEl, faq.question); await humanDelay(); }
-      if (aEl) { await humanType(aEl, faq.answer);   await humanDelay(); }
-    }
-  },
-
-  async fillAll(kw) {
-    await this.fillDescription(kw);
-    await humanDelay();
-    await this.fillFAQs(kw);
-    setMsg('Page 3 done — review and Save & Continue', 'success');
-  }
-};
-
-// ── Bar & Buttons ─────────────────────────────────────────────────────────────
-
-function injectBar() {
-  if (document.getElementById('fai-bar')) return;
-
-  const bar = document.createElement('div');
-  bar.id = 'fai-bar';
-  bar.innerHTML = `
-    <span class="fai-logo">⚡ AI Fill</span>
-    <input id="fai-keywords" type="text" placeholder="Keywords: algo trading, mt5, python…" autocomplete="off" />
-    <button id="fai-fill-all">Fill All</button>
-    <div id="fai-spinner"></div>
-    <span id="fai-msg"></span>
-  `;
-  document.body.prepend(bar);
-  document.getElementById('fai-fill-all').addEventListener('click', runFillAll);
-  setTimeout(injectFieldButtons, 1000);
-}
-
-function injectFieldButtons() {
-  const tab = getCurrentTab();
-
-  if (tab === 'general') {
-    injectBtn(PAGE1.titleInput(), '⚡ Title', async (kw) => {
-      await PAGE1.fillTitle(kw);
-      setMsg('Title filled!', 'success');
-    });
-    injectBtn(PAGE1.tagInput(), '⚡ Tags', async (kw) => {
-      await PAGE1.fillTags(kw);
-      setMsg('Tags added!', 'success');
-    });
-  }
-
-  if (tab === 'pricing') {
-    const nameFields = PAGE2.packageFields('Name your package');
-    nameFields.forEach((el, i) => {
-      const labels = ['Basic name', 'Standard name', 'Premium name'];
-      injectBtn(el, `⚡ ${labels[i]}`, async (kw) => {
-        const raw = await ask(`Keywords: ${kw}, tier: ${labels[i]}`,
-          `Write a short Fiverr package name (2-4 words) for the ${labels[i].split(' ')[0]} tier. Only the name, nothing else.`);
-        await humanType(el, raw.trim());
-        setMsg('Done', 'success');
-      });
-    });
-  }
-
-  if (tab === 'description') {
-    const editor = PAGE3.descEditor();
-    if (editor && !editor.dataset.faiBtnDone) {
-      editor.dataset.faiBtnDone = '1';
-      const btn = document.createElement('button');
-      btn.className = 'fai-field-btn';
-      btn.textContent = '⚡ Description';
-      btn.style.marginBottom = '8px';
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const kw = getKeywords();
-        if (!kw) { setMsg('Enter keywords first', 'error'); return; }
-        btn.disabled = true; btn.textContent = '…';
-        try {
-          await PAGE3.fillDescription(kw);
-          setMsg('Description filled!', 'success');
-          btn.textContent = '✓';
-          setTimeout(() => { btn.textContent = '⚡ Description'; btn.disabled = false; }, 2000);
-        } catch(err) { setMsg(err.message, 'error'); btn.textContent = '⚡ Description'; btn.disabled = false; }
-      });
-      editor.closest('.ql-container')?.parentElement?.prepend(btn);
-    }
-  }
-}
-
-function injectBtn(el, label, onClickFn) {
-  if (!el || el.dataset.faiBtnDone) return;
-  el.dataset.faiBtnDone = '1';
+function makeBtn(label, onClick) {
   const btn = document.createElement('button');
   btn.className = 'fai-field-btn';
   btn.textContent = label;
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const kw = getKeywords();
-    if (!kw) { setMsg('Enter keywords first', 'error'); return; }
+    if (!kw) { setMsg('Enter keywords in the bar first', 'error'); return; }
     btn.disabled = true;
-    const orig = btn.textContent;
     btn.textContent = '…';
     try {
-      await onClickFn(kw);
-      btn.textContent = '✓';
-      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+      await onClick(kw);
+      btn.textContent = '✓ Done';
+      setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2500);
     } catch (err) {
       setMsg(err.message, 'error');
-      btn.textContent = orig;
+      btn.textContent = label;
       btn.disabled = false;
     }
   });
-  (el.closest('div') || el.parentElement)?.appendChild(btn);
+  return btn;
 }
 
-function getKeywords() {
-  return (document.getElementById('fai-keywords')?.value || '').trim();
-}
+// ── Page 1: Overview ──────────────────────────────────────────────────────────
 
-async function runFillAll() {
-  const kw = getKeywords();
-  if (!kw) return setMsg('Enter keywords first', 'error');
-  setLoading(true);
-  try {
-    const tab = getCurrentTab();
-    if (tab === 'general')     await PAGE1.fillAll(kw);
-    else if (tab === 'pricing')     await PAGE2.fillAll(kw);
-    else if (tab === 'description') await PAGE3.fillAll(kw);
-    else setMsg(`Send screenshot of this tab and I'll add support`, 'info');
-  } catch (e) {
-    setMsg(e.message, 'error');
-  } finally {
-    setLoading(false);
+function injectPage1() {
+  // Title
+  const titleEl = (
+    document.querySelector('textarea[placeholder*="I will"]') ||
+    document.querySelector('input[placeholder*="I will"]') ||
+    document.querySelector('textarea[maxlength="80"]') ||
+    document.querySelector('input[maxlength="80"]')
+  );
+  if (titleEl && !titleEl.dataset.faiDone) {
+    titleEl.dataset.faiDone = '1';
+    const btn = makeBtn('⚡ Generate Title', async (kw) => {
+      setMsg('Generating title…', 'info');
+      const text = await ask(`Keywords: ${kw}`,
+        `Write a Fiverr gig title. The field already shows "I will" — write ONLY what comes after "I will". Do NOT include "I will".
+Max 73 chars. Start with a strong verb (build, develop, automate, design, create).
+Be specific: include service + tool/platform + outcome. No filler words.
+Reply with ONLY the text, no quotes.`
+      );
+      const clean = text.replace(/^["']|["']$/g, '').trim().replace(/^i will\s+/i, '').trim();
+      await humanType(titleEl, clean.slice(0, 73));
+      setMsg('Title filled!', 'success');
+    });
+    titleEl.closest('div')?.after(btn);
+  }
+
+  // Tags
+  const tagEl = (
+    findByNearbyText('input', /positive keywords/i) ||
+    findByNearbyText('input', /5 tags maximum/i) ||
+    document.querySelector('input[placeholder*="tag" i]')
+  );
+  if (tagEl && !tagEl.dataset.faiDone) {
+    tagEl.dataset.faiDone = '1';
+    const btn = makeBtn('⚡ Generate Tags', async (kw) => {
+      setMsg('Adding tags…', 'info');
+      const raw = await ask(`Keywords: ${kw}`,
+        `Generate exactly 5 Fiverr search tags. lowercase, 1-3 words each, letters and numbers only, no special chars.
+Return ONLY a comma-separated list. Example: algo trading, mt5 bot, python trading, expert advisor, automated trading`
+      );
+      const tags = raw.split(',').map(t => t.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '')).filter(Boolean).slice(0, 5);
+      for (const tag of tags) { await typeTag(tagEl, tag); await humanDelay(); }
+      setMsg('Tags added!', 'success');
+    });
+    tagEl.closest('div')?.after(btn);
   }
 }
 
-// ── Init & SPA watch ─────────────────────────────────────────────────────────
+// ── Page 2: Pricing ───────────────────────────────────────────────────────────
 
-function init() {
-  if (GIG_PATTERN.test(location.href)) setTimeout(injectBar, 900);
+function injectPage2() {
+  const nameFields = [...document.querySelectorAll('textarea[placeholder*="Name your package"]')].slice(0, 3);
+  const descFields = [...document.querySelectorAll('textarea[placeholder*="Describe the details"]')].slice(0, 3);
+
+  if (!nameFields.length) return;
+
+  // One "Fill Packages" button above the table
+  const anchor = nameFields[0].closest('table, div[class*="package"], section') || nameFields[0].closest('div');
+  if (anchor && !anchor.dataset.faiDone) {
+    anchor.dataset.faiDone = '1';
+    const btn = makeBtn('⚡ Generate All Packages', async (kw) => {
+      setMsg('Generating packages…', 'info');
+      const raw = await ask(`Keywords: ${kw}`,
+        `Create 3 Fiverr packages. Return ONLY valid JSON:
+{
+  "basic":    { "name": "Basic",    "description": "65-90 chars, one sentence, key deliverable", "price": 30  },
+  "standard": { "name": "Standard", "description": "65-90 chars, one sentence, key deliverable", "price": 75  },
+  "premium":  { "name": "Premium",  "description": "65-90 chars, one sentence, key deliverable", "price": 150 }
+}
+Description: 65-90 characters, specific, mentions what is included. Prices realistic for: ${kw}.`
+      );
+      let pkgs;
+      try { pkgs = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); }
+      catch { throw new Error('Could not parse packages — try again'); }
+
+      const tiers = ['basic', 'standard', 'premium'];
+      const priceInputs = [...document.querySelectorAll('input[type="number"], input[type="text"]')]
+        .filter(el => el.closest('td, [class*="price"]') && isVisible(el)).slice(0, 3);
+
+      for (let i = 0; i < 3; i++) {
+        const pkg = pkgs[tiers[i]];
+        if (!pkg) continue;
+        setMsg(`Filling ${tiers[i]}…`, 'info');
+        if (nameFields[i]) { await humanType(nameFields[i], pkg.name); await humanDelay(); }
+        if (descFields[i]) { await humanType(descFields[i], pkg.description.trim().slice(0, 99)); await humanDelay(); }
+        if (priceInputs[i]) { await humanType(priceInputs[i], String(pkg.price)); await humanDelay(); }
+      }
+      setMsg('Packages done — set Delivery Time manually', 'success');
+    });
+    anchor.before(btn);
+  }
 }
 
-let lastUrl = location.href;
+// ── Page 3: Description & FAQ ─────────────────────────────────────────────────
+
+function injectPage3() {
+  // ── Description ──
+  const editor = document.querySelector('.ql-editor[contenteditable="true"]');
+  const toolbar = document.querySelector('.ql-toolbar');
+
+  if (editor && toolbar && !toolbar.dataset.faiDone) {
+    toolbar.dataset.faiDone = '1';
+    const btn = makeBtn('⚡ Generate Description', async (kw) => {
+      setMsg('Generating description…', 'info');
+      const text = await ask(`Keywords: ${kw}`,
+        `Write a professional Fiverr gig description (max 1100 characters).
+Use this exact format with Quill-compatible HTML only (no markdown):
+<p><strong>🚀 [Hook sentence about the value you deliver]</strong></p>
+<p>What you get:</p>
+<ul>
+<li>✅ [Feature 1]</li>
+<li>✅ [Feature 2]</li>
+<li>✅ [Feature 3]</li>
+<li>✅ [Feature 4]</li>
+<li>✅ [Feature 5]</li>
+</ul>
+<p><strong>Why choose me?</strong></p>
+<p>[2 sentences on experience and quality]</p>
+<p>📩 Message me now to get started!</p>
+Return ONLY the HTML, nothing else. Total under 1100 chars.`
+      );
+      editor.click();
+      editor.focus();
+      await sleep(rand(150, 300));
+      editor.innerHTML = '<p><br></p>';
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      await sleep(200);
+      editor.innerHTML = text.trim();
+      editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      editor.dispatchEvent(new Event('change', { bubbles: true }));
+      setMsg('Description filled!', 'success');
+    });
+    btn.style.marginBottom = '6px';
+    btn.style.display = 'block';
+    toolbar.before(btn);
+  }
+
+  // ── FAQs ──
+  const faqHeading = [...document.querySelectorAll('h2,h3,h4,p,div,span')]
+    .find(el => el.children.length === 0 && /frequently asked questions/i.test(el.textContent.trim()));
+
+  if (faqHeading && !faqHeading.dataset.faiDone) {
+    faqHeading.dataset.faiDone = '1';
+    const btn = makeBtn('⚡ Generate FAQs', async (kw) => {
+      setMsg('Generating FAQs…', 'info');
+      const raw = await ask(`Keywords: ${kw}`,
+        `Write 4 FAQs for a Fiverr gig. Return ONLY valid JSON array:
+[
+  { "question": "...", "answer": "1-2 sentence answer" },
+  { "question": "...", "answer": "1-2 sentence answer" },
+  { "question": "...", "answer": "1-2 sentence answer" },
+  { "question": "...", "answer": "1-2 sentence answer" }
+]
+Cover: revisions policy, delivery time, tech/tools used, support. JSON only.`
+      );
+      let faqs;
+      try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
+      catch { throw new Error('Could not parse FAQs — try again'); }
+
+      for (let i = 0; i < faqs.length; i++) {
+        const addBtn = [...document.querySelectorAll('a,button,span')]
+          .find(el => /^\+?\s*Add FAQ$/i.test(el.textContent.trim()));
+        if (!addBtn) { setMsg(`Added ${i} FAQs — "+ Add FAQ" not found`, 'error'); break; }
+        addBtn.click();
+        await sleep(rand(700, 1100));
+
+        const qInputs = [...document.querySelectorAll('input[placeholder*="question" i]')];
+        const aInputs = [...document.querySelectorAll('textarea[placeholder*="answer" i]')];
+        const qEl = qInputs[qInputs.length - 1];
+        const aEl = aInputs[aInputs.length - 1];
+        if (qEl) { await humanType(qEl, faqs[i].question); await humanDelay(); }
+        if (aEl) { await humanType(aEl, faqs[i].answer);   await humanDelay(); }
+        setMsg(`FAQ ${i + 1}/4 added`, 'info');
+      }
+      setMsg('FAQs done!', 'success');
+    });
+    faqHeading.after(btn);
+  }
+}
+
+// ── Top bar ───────────────────────────────────────────────────────────────────
+
+function injectBar() {
+  if (document.getElementById('fai-bar')) return;
+  const bar = document.createElement('div');
+  bar.id = 'fai-bar';
+  bar.innerHTML = `
+    <span class="fai-logo">⚡ AI Fill</span>
+    <input id="fai-keywords" type="text" placeholder="Keywords: algo trading, mt5, python…" autocomplete="off" />
+    <span id="fai-msg"></span>
+  `;
+  document.body.prepend(bar);
+}
+
+// ── Observe & inject ──────────────────────────────────────────────────────────
+
+function scanAndInject() {
+  if (!GIG_PATTERN.test(location.href)) return;
+  injectBar();
+  injectPage1();
+  injectPage2();
+  injectPage3();
+}
+
+let debounce;
 new MutationObserver(() => {
-  if (location.href !== lastUrl) {
-    lastUrl = location.href;
-    if (GIG_PATTERN.test(location.href)) {
-      document.getElementById('fai-bar')?.remove();
-      setTimeout(() => { injectBar(); }, 1000);
-    } else {
-      document.getElementById('fai-bar')?.remove();
-    }
-  }
+  clearTimeout(debounce);
+  debounce = setTimeout(scanAndInject, 600);
 }).observe(document.body, { childList: true, subtree: true });
 
-init();
+setTimeout(scanAndInject, 1000);
