@@ -495,22 +495,39 @@ JSON only.`
 
 // ── Top bar ───────────────────────────────────────────────────────────────────
 
+function getPageLabel() {
+  const url = location.href;
+  if (/step=scope|tab=scope|pricing/i.test(url)) return 'Pricing';
+  if (/step=description|tab=description/i.test(url) || document.querySelector('.ql-editor')) return 'Description';
+  if (/step=requirements|tab=requirements/i.test(url)) return 'Requirements';
+  if (/manage_gigs/.test(url)) return 'Overview';
+  return 'Gig Editor';
+}
+
+function updatePageBadge() {
+  const badge = document.getElementById('fai-page-badge');
+  if (badge) badge.textContent = getPageLabel();
+}
+
 function injectBar() {
   if (document.getElementById('fai-bar')) return;
   const bar = document.createElement('div');
   bar.id = 'fai-bar';
   bar.innerHTML = `
-    <span class="fai-logo"><span class="fai-logo-icon">✦</span> Gig AI</span>
+    <div class="fai-logo">
+      <span class="fai-logo-icon">✦</span>
+      <span class="fai-logo-name">Gig AI</span>
+      <span class="fai-page-badge" id="fai-page-badge">${getPageLabel()}</span>
+    </div>
+    <span class="fai-bar-sep"></span>
     <input id="fai-keywords" type="text" placeholder="Keywords: ibkr bot, python, algo trading…" autocomplete="off" />
     <span id="fai-msg"></span>
   `;
   document.body.prepend(bar);
 
-  // Restore saved keywords
   const saved = sessionStorage.getItem('fai_keywords');
   if (saved) document.getElementById('fai-keywords').value = saved;
 
-  // Save on every keystroke
   document.getElementById('fai-keywords').addEventListener('input', function () {
     sessionStorage.setItem('fai_keywords', this.value);
   });
@@ -521,6 +538,7 @@ function injectBar() {
 function scanAndInject() {
   if (!GIG_PATTERN.test(location.href)) return;
   injectBar();
+  updatePageBadge();
   injectPage1();
   injectPage2();
   injectPage3();

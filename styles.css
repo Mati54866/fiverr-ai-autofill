@@ -5,34 +5,57 @@
   z-index: 999999;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 10px;
+  padding: 7px 16px;
   background: #0d0d0d;
-  border-bottom: 1px solid #1e1e1e;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid #222;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 12.5px;
+  min-height: 42px;
 }
 
 .fai-logo {
   display: flex;
   align-items: center;
-  gap: 7px;
-  color: #fff;
-  font-weight: 700;
+  gap: 8px;
   white-space: nowrap;
-  font-size: 12.5px;
-  letter-spacing: -0.1px;
   flex-shrink: 0;
 }
 
 .fai-logo-icon {
-  width: 22px; height: 22px;
+  width: 24px; height: 24px;
   background: linear-gradient(135deg, #1DBF73, #0f8a50);
-  border-radius: 6px;
+  border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: #fff;
-  box-shadow: 0 1px 6px rgba(29, 191, 115, 0.35);
+  font-size: 13px; color: #fff;
+  box-shadow: 0 1px 8px rgba(29, 191, 115, 0.4);
+  flex-shrink: 0;
+}
+
+.fai-logo-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  letter-spacing: -0.2px;
+}
+
+.fai-page-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: #0d2018;
+  border: 1px solid #1a4a30;
+  color: #1DBF73;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.fai-bar-sep {
+  width: 1px;
+  height: 20px;
+  background: #222;
   flex-shrink: 0;
 }
 
@@ -102,5 +125,5 @@
 
 /* Push Fiverr content below bar */
 body {
-  padding-top: 40px !important;
+  padding-top: 44px !important;
 }
