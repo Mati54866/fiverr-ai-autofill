@@ -31,7 +31,7 @@ body {
 }
 .header-info { flex: 1; }
 .header-title { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-.header-sub { font-size: 11px; color: #383838; margin-top: 2px; }
+.header-sub { font-size: 11px; color: #555; margin-top: 2px; }
 .status-pill {
   display: flex; align-items: center; gap: 5px;
   padding: 5px 11px; border-radius: 20px;
@@ -44,43 +44,43 @@ body {
 .tab {
   flex: 1; padding: 10px 6px;
   text-align: center; cursor: pointer;
-  font-size: 12px; font-weight: 500; color: #444;
+  font-size: 12px; font-weight: 500; color: #666;
   border-bottom: 2px solid transparent;
   transition: all 0.15s; user-select: none;
 }
-.tab:hover { color: #777; }
+.tab:hover { color: #999; }
 .tab.active { color: #1DBF73; border-bottom-color: #1DBF73; font-weight: 600; }
 
 .panel { display: none; padding: 14px; }
 .panel.active { display: block; }
 
 .card {
-  background: #111; border: 1px solid #1d1d1d;
+  background: #111; border: 1px solid #222;
   border-radius: 10px; padding: 13px 14px; margin-bottom: 10px;
 }
 .card:last-child { margin-bottom: 0; }
 .card-title {
-  font-size: 10px; font-weight: 700; color: #363636;
+  font-size: 10px; font-weight: 700; color: #585858;
   text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
 }
 
 .inp {
-  width: 100%; background: #0d0d0d; border: 1px solid #232323;
+  width: 100%; background: #0d0d0d; border: 1px solid #2e2e2e;
   border-radius: 7px; color: #e0e0e0; padding: 7px 10px;
   font-size: 12.5px; outline: none; font-family: inherit; transition: border 0.15s;
 }
 .inp:focus { border-color: #1DBF73; }
-.inp::placeholder { color: #282828; }
+.inp::placeholder { color: #484848; }
 
 textarea.inp { resize: none; height: 58px; line-height: 1.5; }
 
 .field-label {
-  font-size: 11px; color: #3a3a3a; margin-bottom: 5px;
+  font-size: 11px; color: #666; margin-bottom: 5px;
   display: flex; justify-content: space-between; align-items: center;
 }
 .badge {
   font-size: 10px; padding: 1px 7px; border-radius: 4px;
-  background: #161616; border: 1px solid #232323; color: #3a3a3a;
+  background: #161616; border: 1px solid #2a2a2a; color: #555;
 }
 
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
@@ -98,8 +98,8 @@ textarea.inp { resize: none; height: 58px; line-height: 1.5; }
 .toggle-row {
   display: flex; align-items: center; justify-content: space-between;
 }
-.toggle-label { font-size: 13px; color: #c0c0c0; }
-.toggle-sub { font-size: 11px; color: #383838; margin-top: 2px; }
+.toggle-label { font-size: 13px; color: #c8c8c8; }
+.toggle-sub { font-size: 11px; color: #666; margin-top: 2px; }
 .switch { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider {
@@ -121,7 +121,7 @@ input:checked + .slider:before { background: #1DBF73; transform: translateX(17px
 }
 .row:last-child { border-bottom: none; padding-bottom: 0; }
 .row:first-child { padding-top: 0; }
-.row-label { color: #a0a0a0; font-size: 12.5px; }
+.row-label { color: #bbb; font-size: 12.5px; }
 .row-val { font-size: 11px; color: #1DBF73; }
 
 /* Steps */
@@ -142,9 +142,9 @@ input:checked + .slider:before { background: #1DBF73; transform: translateX(17px
 .key-row:last-of-type { margin-bottom: 0; }
 .eye-btn {
   position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: #363636; cursor: pointer; font-size: 13px; padding: 2px;
+  background: none; border: none; color: #555; cursor: pointer; font-size: 13px; padding: 2px;
 }
-.eye-btn:hover { color: #666; }
+.eye-btn:hover { color: #999; }
 .key-row .inp { padding-right: 32px; }
 
 select.inp {
@@ -158,11 +158,11 @@ select.inp {
 .temp-val { font-size: 13px; font-weight: 700; color: #1DBF73; min-width: 28px; text-align: right; }
 
 .footer {
-  padding: 10px 16px; border-top: 1px solid #181818;
+  padding: 10px 16px; border-top: 1px solid #1e1e1e;
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; color: #2a2a2a;
+  font-size: 11px; color: #555;
 }
-.footer a { color: #333; text-decoration: none; transition: color 0.15s; }
+.footer a { color: #666; text-decoration: none; transition: color 0.15s; }
 .footer a:hover { color: #1DBF73; }
 .footer-links { display: flex; gap: 12px; }
 
@@ -230,7 +230,7 @@ select.inp {
 <div class="panel" id="tab-api">
   <div class="card">
     <div class="card-title">Groq API Keys</div>
-    <p style="font-size:11.5px;color:#3a3a3a;line-height:1.5;margin-bottom:12px">Up to 3 keys — auto-rotated on rate limit. <a href="https://console.groq.com" target="_blank" style="color:#1DBF73;text-decoration:none">Get free key →</a></p>
+    <p style="font-size:11.5px;color:#666;line-height:1.5;margin-bottom:12px">Up to 3 keys — auto-rotated on rate limit. <a href="https://console.groq.com" target="_blank" style="color:#1DBF73;text-decoration:none">Get free key →</a></p>
 
     <div class="field-label"><span>Key 1</span></div>
     <div class="key-row">
@@ -270,7 +270,7 @@ select.inp {
   </div>
   <div class="card">
     <div class="card-title">Temperature</div>
-    <p style="font-size:11px;color:#333;margin-bottom:8px">Lower = focused &nbsp;·&nbsp; Higher = creative</p>
+    <p style="font-size:11px;color:#666;margin-bottom:8px">Lower = focused &nbsp;·&nbsp; Higher = creative</p>
     <div class="temp-row">
       <input type="range" id="tempRange" min="0" max="10" value="7" step="1">
       <span class="temp-val" id="tempVal">0.7</span>
