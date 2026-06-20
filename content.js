@@ -39,10 +39,17 @@ async function humanType(el, text) {
 
 // For Quill/contenteditable rich editors
 async function humanTypeRich(el, text) {
+  el.click();
   el.focus();
-  await sleep(rand(100, 250));
-  el.innerHTML = text.split('\n').map(l => `<p>${l || '<br>'}</p>`).join('');
+  await sleep(rand(200, 400));
+  // Clear first
+  el.innerHTML = '<p><br></p>';
   el.dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(rand(100, 200));
+  // Set content
+  el.innerHTML = text.split('\n').filter(Boolean).map(l => `<p>${l}</p>`).join('');
+  el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
   await sleep(rand(200, 400));
 }
 
@@ -66,7 +73,35 @@ async function typeTag(input, tag) {
 }
 
 function getCurrentTab() {
-  return new URL(location.href).searchParams.get('tab') || 'general';
+  // 1. Try URL param first
+  const urlTab = new URL(location.href).searchParams.get('tab');
+  if (urlTab) return urlTab.toLowerCase();
+
+  // 2. Read the active step from Fiverr's breadcrumb
+  const steps = [...document.querySelectorAll('nav li, nav a, [class*="step"], [class*="tab"], [class*="wizard"]')];
+  const active = steps.find(el => {
+    const cls = el.className || '';
+    return /active|current|selected/i.test(cls) && el.textContent.trim();
+  });
+
+  if (active) {
+    const text = active.textContent.toLowerCase();
+    if (text.includes('overview') || text.includes('general'))    return 'general';
+    if (text.includes('pric'))                                     return 'pricing';
+    if (text.includes('description') || text.includes('faq'))     return 'description';
+    if (text.includes('requirement'))                              return 'requirements';
+    if (text.includes('gallery'))                                  return 'gallery';
+    if (text.includes('publish'))                                  return 'publish';
+  }
+
+  // 3. Detect by page content
+  if (document.querySelector('.ql-editor'))                        return 'description';
+  if (document.querySelector('textarea[placeholder*="I will"]') ||
+      document.querySelector('input[maxlength="80"]'))             return 'general';
+  if (document.querySelector('textarea[placeholder*="Name your package"]') ||
+      document.querySelector('textarea[placeholder*="Describe the details"]')) return 'pricing';
+
+  return 'general';
 }
 
 function setMsg(text, type = 'info') {
