@@ -1,8 +1,32 @@
 const GIG_PATTERN = /fiverr\.com\/users\/[^/]+\/manage_gigs/;
 
 let apiKey = '';
+let faiKeywords = '';
+let faiEnabled = true;
+
 chrome.storage.sync.get(['groqApiKey'], ({ groqApiKey }) => { apiKey = groqApiKey || ''; });
-chrome.storage.onChanged.addListener(c => { if (c.groqApiKey) apiKey = c.groqApiKey.newValue || ''; });
+chrome.storage.local.get(['faiKeywords', 'faiEnabled'], (data) => {
+  faiKeywords = data.faiKeywords || '';
+  faiEnabled = data.faiEnabled !== false;
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && changes.groqApiKey) apiKey = changes.groqApiKey.newValue || '';
+  if (area === 'local') {
+    if (changes.faiKeywords) faiKeywords = changes.faiKeywords.newValue || '';
+    if (changes.faiEnabled !== undefined) {
+      faiEnabled = changes.faiEnabled.newValue !== false;
+      applyEnabledState();
+    }
+  }
+});
+
+function applyEnabledState() {
+  document.querySelectorAll('.fai-field-btn').forEach(b => {
+    b.style.display = faiEnabled ? '' : 'none';
+  });
+  if (faiEnabled) scanAndInject();
+}
 
 // ── Anti-detection ────────────────────────────────────────────────────────────
 
@@ -52,13 +76,10 @@ async function typeTag(input, tag) {
 // ── Groq ──────────────────────────────────────────────────────────────────────
 
 function getKeywords() {
-  return (document.getElementById('fai-keywords')?.value || '').trim();
+  return faiKeywords;
 }
 
-function setMsg(text, type = 'info') {
-  const el = document.getElementById('fai-msg');
-  if (el) { el.textContent = text; el.className = `fai-msg-${type}`; }
-}
+function setMsg() {} // no-op: status shown in button state
 
 function isVisible(el) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
@@ -493,52 +514,11 @@ JSON only.`
   else reqTextarea.closest('div')?.before(btn);
 }
 
-// ── Top bar ───────────────────────────────────────────────────────────────────
-
-function getPageLabel() {
-  const url = location.href;
-  if (/step=scope|tab=scope|pricing/i.test(url)) return 'Pricing';
-  if (/step=description|tab=description/i.test(url) || document.querySelector('.ql-editor')) return 'Description';
-  if (/step=requirements|tab=requirements/i.test(url)) return 'Requirements';
-  if (/manage_gigs/.test(url)) return 'Overview';
-  return 'Gig Editor';
-}
-
-function updatePageBadge() {
-  const badge = document.getElementById('fai-page-badge');
-  if (badge) badge.textContent = getPageLabel();
-}
-
-function injectBar() {
-  if (document.getElementById('fai-bar')) return;
-  const bar = document.createElement('div');
-  bar.id = 'fai-bar';
-  bar.innerHTML = `
-    <div class="fai-logo">
-      <span class="fai-logo-icon">✦</span>
-      <span class="fai-logo-name">Gig AI</span>
-      <span class="fai-page-badge" id="fai-page-badge">${getPageLabel()}</span>
-    </div>
-    <span class="fai-bar-sep"></span>
-    <input id="fai-keywords" type="text" placeholder="Keywords: ibkr bot, python, algo trading…" autocomplete="off" />
-    <span id="fai-msg"></span>
-  `;
-  document.body.prepend(bar);
-
-  const saved = sessionStorage.getItem('fai_keywords');
-  if (saved) document.getElementById('fai-keywords').value = saved;
-
-  document.getElementById('fai-keywords').addEventListener('input', function () {
-    sessionStorage.setItem('fai_keywords', this.value);
-  });
-}
-
 // ── Observe & inject ──────────────────────────────────────────────────────────
 
 function scanAndInject() {
   if (!GIG_PATTERN.test(location.href)) return;
-  injectBar();
-  updatePageBadge();
+  if (!faiEnabled) return;
   injectPage1();
   injectPage2();
   injectPage3();

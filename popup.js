@@ -11,9 +11,9 @@ document.querySelectorAll('.tab').forEach(tab => {
 function toast(msg, err = false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.style.background = err ? '#1f0d0d' : '#0d1f0d';
+  el.style.background = err ? '#1f0d0d' : '#081408';
   el.style.borderColor = err ? '#3f1a1a' : '#1a4a1a';
-  el.style.color       = err ? '#f87171' : '#4ade80';
+  el.style.color       = err ? '#f87171' : '#34c76e';
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2200);
 }
@@ -27,7 +27,12 @@ document.querySelectorAll('.eye-btn').forEach(btn => {
   });
 });
 
-// Load saved values
+// Load all saved values
+chrome.storage.local.get(['faiKeywords', 'faiEnabled'], ({ faiKeywords, faiEnabled }) => {
+  if (faiKeywords) document.getElementById('fai-kw').value = faiKeywords;
+  document.getElementById('faiEnabled').checked = faiEnabled !== false;
+});
+
 chrome.storage.sync.get(['groqKeys', 'model', 'temperature'], ({ groqKeys, model, temperature }) => {
   const keys = groqKeys || [];
   ['k1', 'k2', 'k3'].forEach((id, i) => {
@@ -41,16 +46,25 @@ chrome.storage.sync.get(['groqKeys', 'model', 'temperature'], ({ groqKeys, model
   }
 });
 
-// Save keys
+// Save keywords
+document.getElementById('saveKw').addEventListener('click', () => {
+  const kw = document.getElementById('fai-kw').value.trim();
+  if (!kw) { toast('Enter at least one keyword', true); return; }
+  chrome.storage.local.set({ faiKeywords: kw }, () => toast('◆ Keywords saved'));
+});
+
+// Toggle: show/hide buttons on Fiverr
+document.getElementById('faiEnabled').addEventListener('change', function () {
+  chrome.storage.local.set({ faiEnabled: this.checked });
+});
+
+// Save API keys
 document.getElementById('saveKeys').addEventListener('click', () => {
   const keys = ['k1', 'k2', 'k3']
     .map(id => document.getElementById(id).value.trim())
     .filter(Boolean);
   if (!keys.length) { toast('Enter at least one API key', true); return; }
-  // Also keep backward-compat: save first key as groqApiKey
-  chrome.storage.sync.set({ groqKeys: keys, groqApiKey: keys[0] }, () => {
-    toast('◆ Keys saved');
-  });
+  chrome.storage.sync.set({ groqKeys: keys, groqApiKey: keys[0] }, () => toast('◆ Keys saved'));
 });
 
 // Test connection
@@ -59,15 +73,10 @@ document.getElementById('testBtn').addEventListener('click', async () => {
     .map(id => document.getElementById(id).value.trim())
     .filter(Boolean);
   if (!keys.length) { toast('Enter an API key first', true); return; }
-
   document.getElementById('testBtn').textContent = '…';
   const res = await chrome.runtime.sendMessage({
     type: 'GROQ_REQUEST',
-    payload: {
-      apiKey: keys[0],
-      prompt: 'Say "OK" only.',
-      systemPrompt: 'Reply with only "OK".'
-    }
+    payload: { apiKey: keys[0], prompt: 'Say "OK" only.', systemPrompt: 'Reply with only "OK".' }
   });
   document.getElementById('testBtn').textContent = '▸ Test';
   if (res.error) toast('Error: ' + res.error, true);
