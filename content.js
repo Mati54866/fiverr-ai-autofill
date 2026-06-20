@@ -219,22 +219,25 @@ function injectPage3() {
     const btn = makeBtn('⚡ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
       const text = await ask(`Keywords: ${kw}`,
-        `Write a professional Fiverr gig description. Plain text only — no HTML, no markdown, no asterisks.
-Structure (use these exact section labels on their own lines):
-Line 1: A strong hook sentence about the value you deliver
-blank line
+        `Write a professional Fiverr gig description. Plain text only — no HTML, no markdown, no asterisks, no bullet dashes.
+Use this exact structure with blank lines between sections:
+
+[2-3 sentence opening hook about the value and outcome you deliver]
+
 What You Get:
-- [specific deliverable 1]
-- [specific deliverable 2]
-- [specific deliverable 3]
-- [specific deliverable 4]
-- [specific deliverable 5]
-blank line
+✅ [specific deliverable 1]
+✅ [specific deliverable 2]
+✅ [specific deliverable 3]
+✅ [specific deliverable 4]
+✅ [specific deliverable 5]
+✅ [specific deliverable 6]
+
 Why Choose Me:
-[2 sentences about experience, quality, support]
-blank line
-Message me now to discuss your project!
-Total: 400-900 characters. Plain text only.`
+[3 sentences about your experience, quality of work, fast delivery, and support]
+
+[Strong 1-sentence call to action to message you]
+
+TARGET: 1000-1100 characters total. Count carefully — must be between 1000 and 1100 chars. Plain text only.`
       );
 
       // Use execCommand to insert text — fires all native browser events Quill listens to
@@ -284,26 +287,42 @@ Total: 400-900 characters. Plain text only.`
   { "question": "...", "answer": "1-2 sentence answer" },
   { "question": "...", "answer": "1-2 sentence answer" }
 ]
-Cover: revisions policy, delivery time, tech/tools used, support. JSON only.`
+Cover: revisions policy, delivery time, tech/tools used, support.
+Answer max 280 characters each. JSON only.`
       );
       let faqs;
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
       catch { throw new Error('Could not parse FAQs — try again'); }
 
       for (let i = 0; i < faqs.length; i++) {
-        const addBtn = [...document.querySelectorAll('a,button,span')]
-          .find(el => /^\+?\s*Add FAQ$/i.test(el.textContent.trim()));
-        if (!addBtn) { setMsg(`Added ${i} FAQs — "+ Add FAQ" not found`, 'error'); break; }
-        addBtn.click();
-        await sleep(rand(700, 1100));
+        setMsg(`Adding FAQ ${i + 1}/4…`, 'info');
 
-        const qInputs = [...document.querySelectorAll('input[placeholder*="question" i]')];
-        const aInputs = [...document.querySelectorAll('textarea[placeholder*="answer" i]')];
-        const qEl = qInputs[qInputs.length - 1];
-        const aEl = aInputs[aInputs.length - 1];
-        if (qEl) { await humanType(qEl, faqs[i].question); await humanDelay(); }
-        if (aEl) { await humanType(aEl, faqs[i].answer);   await humanDelay(); }
-        setMsg(`FAQ ${i + 1}/4 added`, 'info');
+        // If no input is visible, click "+ Add FAQ" to open the form
+        let qEl = document.querySelector('input[placeholder*="Add a Question" i]');
+        if (!qEl) {
+          const addBtn = [...document.querySelectorAll('a, button, span, p')]
+            .find(el => /add faq/i.test(el.textContent.trim()));
+          if (!addBtn) { setMsg(`FAQ form not found after ${i} entries`, 'error'); break; }
+          addBtn.click();
+          await sleep(rand(700, 1000));
+          qEl = document.querySelector('input[placeholder*="Add a Question" i]');
+        }
+
+        const aEl = document.querySelector('textarea[placeholder*="Add an Answer" i]');
+        if (!qEl || !aEl) { setMsg(`FAQ inputs not found at entry ${i + 1}`, 'error'); break; }
+
+        // Fill question and answer
+        await humanType(qEl, faqs[i].question);
+        await humanDelay();
+        await humanType(aEl, faqs[i].answer.slice(0, 295));
+        await humanDelay();
+
+        // Click the "Add" button to save this FAQ
+        const saveBtn = [...document.querySelectorAll('button')]
+          .find(el => el.textContent.trim() === 'Add' && isVisible(el));
+        if (!saveBtn) { setMsg(`"Add" button not found at FAQ ${i + 1}`, 'error'); break; }
+        saveBtn.click();
+        await sleep(rand(800, 1200));
       }
       setMsg('FAQs done!', 'success');
     });
