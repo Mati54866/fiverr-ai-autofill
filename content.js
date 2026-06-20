@@ -214,10 +214,11 @@ const PAGE2 = {
       `Keywords: ${kw}`,
       `You are a top-rated Fiverr seller. Create 3 pricing packages. Return ONLY valid JSON:
 {
-  "basic":    { "name": "Basic",    "description": "2 concise sentences on what's included", "price": 30  },
-  "standard": { "name": "Standard", "description": "2 concise sentences on what's included", "price": 75  },
-  "premium":  { "name": "Premium",  "description": "2 concise sentences on what's included", "price": 150 }
+  "basic":    { "name": "Basic",    "description": "one short sentence max 80 chars", "price": 30  },
+  "standard": { "name": "Standard", "description": "one short sentence max 80 chars", "price": 75  },
+  "premium":  { "name": "Premium",  "description": "one short sentence max 80 chars", "price": 150 }
 }
+Description rules: max 80 characters, one sentence only, mention the key deliverable.
 Prices must be realistic for: ${kw}. No markdown, no explanation, only the JSON object.`
     );
 
@@ -241,7 +242,7 @@ Prices must be realistic for: ${kw}. No markdown, no explanation, only the JSON 
         await humanDelay();
       }
       if (descFields[i]) {
-        await humanType(descFields[i], pkg.description);
+        await humanType(descFields[i], pkg.description.slice(0, 80));
         await humanDelay();
       }
       if (priceFields[i]) {
