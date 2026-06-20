@@ -219,31 +219,48 @@ function injectPage3() {
     const btn = makeBtn('⚡ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
       const text = await ask(`Keywords: ${kw}`,
-        `Write a professional Fiverr gig description (max 1100 characters).
-Use this exact format with Quill-compatible HTML only (no markdown):
-<p><strong>🚀 [Hook sentence about the value you deliver]</strong></p>
-<p>What you get:</p>
-<ul>
-<li>✅ [Feature 1]</li>
-<li>✅ [Feature 2]</li>
-<li>✅ [Feature 3]</li>
-<li>✅ [Feature 4]</li>
-<li>✅ [Feature 5]</li>
-</ul>
-<p><strong>Why choose me?</strong></p>
-<p>[2 sentences on experience and quality]</p>
-<p>📩 Message me now to get started!</p>
-Return ONLY the HTML, nothing else. Total under 1100 chars.`
+        `Write a professional Fiverr gig description. Plain text only — no HTML, no markdown, no asterisks.
+Structure (use these exact section labels on their own lines):
+Line 1: A strong hook sentence about the value you deliver
+blank line
+What You Get:
+- [specific deliverable 1]
+- [specific deliverable 2]
+- [specific deliverable 3]
+- [specific deliverable 4]
+- [specific deliverable 5]
+blank line
+Why Choose Me:
+[2 sentences about experience, quality, support]
+blank line
+Message me now to discuss your project!
+Total: 400-900 characters. Plain text only.`
       );
+
+      // Use execCommand to insert text — fires all native browser events Quill listens to
       editor.click();
       editor.focus();
-      await sleep(rand(150, 300));
-      editor.innerHTML = '<p><br></p>';
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
-      await sleep(200);
-      editor.innerHTML = text.trim();
-      editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
-      editor.dispatchEvent(new Event('change', { bubbles: true }));
+      await sleep(rand(200, 400));
+
+      // Select all and delete existing content
+      document.execCommand('selectAll', false, null);
+      await sleep(rand(80, 150));
+      document.execCommand('delete', false, null);
+      await sleep(rand(100, 200));
+
+      // Type the plain text naturally via execCommand
+      const lines = text.trim().split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i] !== '') {
+          document.execCommand('insertText', false, lines[i]);
+          await sleep(rand(30, 80));
+        }
+        if (i < lines.length - 1) {
+          document.execCommand('insertParagraph', false, null);
+          await sleep(rand(40, 100));
+        }
+      }
+
       setMsg('Description filled!', 'success');
     });
     btn.style.marginBottom = '6px';
