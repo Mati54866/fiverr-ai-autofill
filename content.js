@@ -149,9 +149,10 @@ function injectPage1() {
     const btn = makeBtn('◆ Generate Title', async (kw) => {
       setMsg('Generating title…', 'info');
       const text = await ask(`Keywords: ${kw}`,
-        `Write a Fiverr gig title. The field already shows "I will" — write ONLY what comes after "I will". Do NOT include "I will".
-Max 73 chars. Start with a strong verb (build, develop, automate, design, create).
-Be specific: include service + tool/platform + outcome. No filler words.
+        `Write a short, SEO-optimized Fiverr gig title. The field already shows "I will" — write ONLY what comes after "I will". Do NOT include "I will".
+Max 60 chars. Naturally include 1-2 of these keywords: ${kw}.
+Start with a strong verb (build, develop, automate, design, create).
+Be specific and punchy: service + tool/platform + outcome. No filler words.
 Reply with ONLY the text, no quotes.`
       );
       const clean = text.replace(/^["']|["']$/g, '').trim().replace(/^i will\s+/i, '').trim();
@@ -198,13 +199,17 @@ function injectPage2() {
     const btn = makeBtn('◆ Generate Packages', async (kw) => {
       setMsg('Generating packages…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
-        `Create 3 Fiverr packages. Return ONLY valid JSON:
+        `Create 3 Fiverr packages for a gig about: ${kw}. Return ONLY valid JSON:
 {
-  "basic":    { "name": "Basic",    "description": "65-90 chars, one sentence, key deliverable", "price": 30  },
-  "standard": { "name": "Standard", "description": "65-90 chars, one sentence, key deliverable", "price": 75  },
-  "premium":  { "name": "Premium",  "description": "65-90 chars, one sentence, key deliverable", "price": 150 }
+  "basic":    { "name": "UNIQUE_NAME_1", "description": "...", "price": 30  },
+  "standard": { "name": "UNIQUE_NAME_2", "description": "...", "price": 75  },
+  "premium":  { "name": "UNIQUE_NAME_3", "description": "...", "price": 150 }
 }
-Description: 65-90 characters, specific, mentions what is included. Prices realistic for: ${kw}.`
+Rules:
+- Names: creative, unique, tier-appropriate names (NOT Basic/Standard/Premium). Examples: Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate, Lite, Plus, Enterprise. Each must be different.
+- Description: under 90 characters, one clear sentence, mention what is included, naturally use keywords from: ${kw}.
+- Prices realistic for the gig type.
+JSON only.`
       );
       let pkgs;
       try { pkgs = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); }
@@ -219,7 +224,7 @@ Description: 65-90 characters, specific, mentions what is included. Prices reali
         if (!pkg) continue;
         setMsg(`Filling ${tiers[i]}…`, 'info');
         if (nameFields[i]) { await humanType(nameFields[i], pkg.name); await humanDelay(); }
-        if (descFields[i]) { await humanType(descFields[i], pkg.description.trim().slice(0, 99)); await humanDelay(); }
+        if (descFields[i]) { await humanType(descFields[i], pkg.description.trim().slice(0, 89)); await humanDelay(); }
         if (priceInputs[i]) { await humanType(priceInputs[i], String(pkg.price)); await humanDelay(); }
       }
       setMsg('Packages done — set Delivery Time manually', 'success');
@@ -240,21 +245,21 @@ function injectPage3() {
     const btn = makeBtn('◆ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
       const data = await ask(`Keywords: ${kw}`,
-        `Write a professional Fiverr gig description. Return ONLY valid JSON:
+        `Write a professional Fiverr gig description. Naturally weave in these keywords throughout: ${kw}. Return ONLY valid JSON:
 {
-  "hook": "2-3 sentence opening about the value and outcome you deliver (150-200 chars)",
+  "hook": "2-3 sentence opening about value and outcome, include 1-2 keywords naturally (150-200 chars)",
   "bullets": [
-    "specific deliverable 1 (no emoji, plain text)",
+    "specific deliverable 1 using relevant keyword (no emoji, plain text)",
     "specific deliverable 2",
     "specific deliverable 3",
     "specific deliverable 4",
     "specific deliverable 5",
     "specific deliverable 6"
   ],
-  "why": "3 sentences about experience, quality, fast delivery, support (200-250 chars)",
+  "why": "3 sentences about experience, quality, fast delivery, support — include 1-2 keywords naturally (200-250 chars)",
   "cta": "One strong sentence asking them to message you now"
 }
-Be specific to: ${kw}. JSON only, no markdown.`
+Keywords must appear naturally across hook, bullets, and why — not forced or repeated. Be specific to: ${kw}. JSON only, no markdown.`
       );
 
       let desc;
@@ -344,7 +349,10 @@ Return ONLY valid JSON array, no duplicates, no same question twice:
   { "question": "...", "answer": "..." },
   { "question": "...", "answer": "..." }
 ]
-Each answer under 265 characters, specific to the gig. JSON only.`
+Rules:
+- Naturally include relevant keywords from (${kw}) in 2-3 of the answers where it fits.
+- Each answer must be at least 4-8 words (a full sentence), under 265 characters, specific to the gig.
+JSON only.`
       );
       let faqs;
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
