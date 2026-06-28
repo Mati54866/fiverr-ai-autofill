@@ -339,13 +339,14 @@ Keywords must appear naturally across hook, bullets, and why — not forced or r
       setMsg('Generating FAQs…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
         `Write exactly 5 UNIQUE FAQs for a Fiverr gig about: ${kw}
-Each question must cover a DIFFERENT topic. Use this exact topic order:
-1. Delivery time — how long does it take?
-2. Revisions — how many revisions are included?
-3. Tech stack — what tools/languages/platforms do you use?
-4. Source files — will they get source code or editable files?
-5. Communication — how do you keep the client updated?
-Return ONLY valid JSON array, no duplicates, no same question twice:
+Questions and answers must be SPECIFIC to this gig type — not generic.
+Cover these 5 topics in order:
+1. Delivery time — how long does the work take? Be specific (e.g. "3-5 business days depending on complexity").
+2. Revisions — how many revisions are included and what counts as a revision?
+3. Requirements — what information or assets do you need from the buyer to start?
+4. Output/deliverables — exactly what files, formats, or results will the buyer receive?
+5. Experience — what is your background or expertise relevant to this gig?
+Return ONLY valid JSON array:
 [
   { "question": "...", "answer": "..." },
   { "question": "...", "answer": "..." },
@@ -353,10 +354,13 @@ Return ONLY valid JSON array, no duplicates, no same question twice:
   { "question": "...", "answer": "..." },
   { "question": "...", "answer": "..." }
 ]
-Rules:
-- Naturally include relevant keywords from (${kw}) in 2-3 of the answers where it fits.
-- Each answer must be at least 4-8 words (a full sentence), under 265 characters, specific to the gig.
-JSON only.`
+STRICT RULES:
+- NEVER mention email, phone, WhatsApp, Telegram, Skype, or any contact outside Fiverr — this violates Fiverr TOS.
+- All communication happens through Fiverr only.
+- Questions must be phrased as a buyer asking a seller — natural and conversational.
+- Answers: minimum one full sentence, under 265 characters, specific to: ${kw}.
+- Include relevant keywords from (${kw}) naturally in 2-3 answers.
+JSON only, no markdown.`
       );
       let faqs;
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }
