@@ -188,11 +188,8 @@ Return ONLY a comma-separated list. Example: algo trading, mt5 bot, python tradi
 
 function injectPage2() {
   const nameFields = [...document.querySelectorAll('textarea[placeholder*="Name your package"]')].slice(0, 3);
-  const descFields = [...document.querySelectorAll('textarea[placeholder*="Describe the details"]')].slice(0, 3);
-
   if (!nameFields.length) return;
 
-  // One "Fill Packages" button above the table
   const anchor = nameFields[0].closest('table, div[class*="package"], section') || nameFields[0].closest('div');
   if (anchor && !anchor.dataset.faiDone) {
     anchor.dataset.faiDone = '1';
@@ -211,20 +208,27 @@ Rules:
 - Prices realistic for the gig type.
 JSON only.`
       );
+
       let pkgs;
       try { pkgs = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); }
       catch { throw new Error('Could not parse packages — try again'); }
+      if (!pkgs || !pkgs.basic) throw new Error('Invalid package data — try again');
 
-      const tiers = ['basic', 'standard', 'premium'];
+      // Re-query at click time — Fiverr React may have re-rendered since inject
+      const freshNames  = [...document.querySelectorAll('textarea[placeholder*="Name your package"]')].filter(isVisible).slice(0, 3);
+      const freshDescs  = [...document.querySelectorAll('textarea[placeholder*="Describe the details"]')].filter(isVisible).slice(0, 3);
       const priceInputs = [...document.querySelectorAll('input[type="number"], input[type="text"]')]
         .filter(el => el.closest('td, [class*="price"]') && isVisible(el)).slice(0, 3);
 
+      if (!freshNames.length) throw new Error('Package fields not found — scroll to the pricing table first');
+
+      const tiers = ['basic', 'standard', 'premium'];
       for (let i = 0; i < 3; i++) {
         const pkg = pkgs[tiers[i]];
         if (!pkg) continue;
         setMsg(`Filling ${tiers[i]}…`, 'info');
-        if (nameFields[i]) { await humanType(nameFields[i], pkg.name); await humanDelay(); }
-        if (descFields[i]) { await humanType(descFields[i], pkg.description.trim().slice(0, 89)); await humanDelay(); }
+        if (freshNames[i]) { await humanType(freshNames[i], pkg.name); await humanDelay(); }
+        if (freshDescs[i]) { await humanType(freshDescs[i], pkg.description.trim().slice(0, 89)); await humanDelay(); }
         if (priceInputs[i]) { await humanType(priceInputs[i], String(pkg.price)); await humanDelay(); }
       }
       setMsg('Packages done — set Delivery Time manually', 'success');
