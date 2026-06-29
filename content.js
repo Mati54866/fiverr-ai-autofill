@@ -389,23 +389,25 @@ JSON only.`
       async function selectDelivery(colIndex, days) {
         const triggers = findDeliveryTriggers();
         const trigger = triggers[colIndex];
+        console.log('[FAI] delivery trigger['+colIndex+']:', trigger?.tagName, JSON.stringify(trigger?.textContent?.trim()?.slice(0,30)));
         if (!trigger) return;
 
-        // Open dropdown — try React click first, then native
         if (!reactClick(trigger)) trigger.click();
-        await sleep(rand(1400, 1800)); // wait for dropdown animation to fully open
+        await sleep(rand(1400, 1800));
 
-        // Find option by text — normalize whitespace to handle non-breaking spaces
         const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
-        const normalize = t => t.replace(/[\s ]+/g, ' ').trim().toUpperCase();
-        const opt = [...document.querySelectorAll('li, [role="option"], div, span, p')]
-          .find(el => normalize(el.textContent) === label && el.getBoundingClientRect().width > 0);
+        const normalize = t => t.replace(/\s+/g, ' ').trim().toUpperCase();
+        const allCands = [...document.querySelectorAll('li, [role="option"], div, span, p')]
+          .filter(el => el.getBoundingClientRect().width > 0);
+        const opt = allCands.find(el => normalize(el.textContent) === label);
+
+        console.log('[FAI] label:', label, '| opt:', opt?.tagName, JSON.stringify(opt?.textContent?.trim()?.slice(0,30)));
+        console.log('[FAI] DELIVERY items:', allCands.filter(el => normalize(el.textContent).includes('DELIVERY')).map(el => normalize(el.textContent).slice(0,30)).slice(0,10).join(' | '));
 
         if (opt) {
-          // Try React fiber call first (most reliable for React dropdowns)
           const handled = reactClick(opt);
+          console.log('[FAI] reactClick handled:', handled);
           if (!handled) {
-            // Fallback: full pointer event chain
             const or = opt.getBoundingClientRect();
             const cx = or.left + or.width / 2, cy = or.top + or.height / 2;
             const oev = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy };
