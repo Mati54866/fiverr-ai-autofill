@@ -393,7 +393,7 @@ JSON only.`
 
         // Open dropdown — try React click first, then native
         if (!reactClick(trigger)) trigger.click();
-        await sleep(rand(700, 1000));
+        await sleep(rand(1400, 1800)); // wait for dropdown animation to fully open
 
         // Find option by text — normalize whitespace to handle non-breaking spaces
         const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
