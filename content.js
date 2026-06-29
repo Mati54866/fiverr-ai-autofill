@@ -121,11 +121,10 @@ async function typeTag(input, tag) {
 
 function getKeywords() {
   if (GIG_PATTERN.test(location.href)) {
-    // Gig pages: ONLY use the inline niche bar — never fall back to popup profile niche
     const inp = document.getElementById('fai-gig-niche');
-    return inp ? inp.value.trim() : '';
+    // Use bar value if present, otherwise fall back to sessionStorage (persisted from earlier page)
+    return (inp ? inp.value.trim() : '') || sessionStorage.getItem('faiGigNiche') || '';
   }
-  // Profile page: use popup profile niche
   return faiKeywords;
 }
 
@@ -319,6 +318,7 @@ Return ONLY a comma-separated list. Example: algo trading, mt5 bot, python tradi
 // ── Page 2: Pricing ───────────────────────────────────────────────────────────
 
 function injectPage2() {
+  injectNicheBar();
   const nameFields = [...document.querySelectorAll('textarea[placeholder*="Name your package"]')].slice(0, 3);
   if (!nameFields.length) return;
 
@@ -394,6 +394,7 @@ async function waitGone(selector, timeout = 5000) {
 // ── Page 3: Description & FAQ ─────────────────────────────────────────────────
 
 function injectPage3() {
+  injectNicheBar();
   // ── Description ──
   const editor = document.querySelector('.ql-editor[contenteditable="true"]');
   const toolbar = document.querySelector('.ql-toolbar');
@@ -568,6 +569,7 @@ JSON only, no markdown.`
 // ── Page 4: Requirements ─────────────────────────────────────────────────────
 
 function injectPage4() {
+  injectNicheBar();
   // Detect by the requirements textarea placeholder
   const reqTextarea = document.querySelector('textarea[placeholder*="Request necessary details" i]');
   const heading = [...document.querySelectorAll('h2,h3,h4,p,div,span')]
