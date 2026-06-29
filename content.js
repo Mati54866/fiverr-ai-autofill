@@ -120,11 +120,12 @@ async function typeTag(input, tag) {
 // ── Groq ──────────────────────────────────────────────────────────────────────
 
 function getKeywords() {
-  // On gig pages read from the inline niche input, not from popup storage
   if (GIG_PATTERN.test(location.href)) {
+    // Gig pages: ONLY use the inline niche bar — never fall back to popup profile niche
     const inp = document.getElementById('fai-gig-niche');
-    return inp ? inp.value.trim() : faiKeywords;
+    return inp ? inp.value.trim() : '';
   }
+  // Profile page: use popup profile niche
   return faiKeywords;
 }
 
@@ -392,28 +393,29 @@ function injectPage3() {
     const btn = makeBtn('◆ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
       const data = await ask(`Keywords: ${kw}`,
-        `Write a professional Fiverr gig description for: ${kw}.
-Total length must be ~900 characters including spaces across all sections combined.
-Return ONLY valid JSON:
+        `Write a Fiverr gig description for: ${kw}. Return ONLY valid JSON with these exact keys:
 {
-  "hook": "2-3 sentences, value + outcome, 1-2 keywords (180-200 chars)",
-  "bullets": [
-    "specific deliverable with keyword (60-70 chars each)",
-    "specific deliverable",
-    "specific deliverable",
-    "specific deliverable",
-    "specific deliverable",
-    "specific deliverable"
-  ],
-  "why": "2-3 sentences on experience, quality, delivery, support (180-200 chars)",
-  "cta": "One strong call-to-action sentence (60-80 chars)"
+  "hook": "Opening paragraph: 2-3 sentences on value and outcome. ~180 chars.",
+  "bullets": ["deliverable 1", "deliverable 2", "deliverable 3", "deliverable 4", "deliverable 5", "deliverable 6"],
+  "why": "Why choose me paragraph: 2-3 sentences on experience, quality, speed, support. ~180 chars.",
+  "cta": "Single call-to-action sentence. ~70 chars."
 }
-Aim so hook + bullets + why + cta totals ~900 chars. Weave keywords naturally. JSON only.`
+Rules:
+- Each bullet is a SHORT specific deliverable (no emoji, 8-12 words max)
+- Weave keywords naturally: ${kw}
+- Total hook+bullets+why+cta must be ~900 characters including spaces
+- Output JSON only — no extra text, no char counts, no explanations`
       );
 
       let desc;
       try { desc = JSON.parse(data.match(/\{[\s\S]*\}/)?.[0]); }
       catch { throw new Error('Could not parse description — try again'); }
+      if (!desc?.hook || !Array.isArray(desc.bullets)) throw new Error('Bad description format — try again');
+      // Sanitise: ensure bullets are plain strings, strip any char-count notes AI may have added
+      desc.bullets = desc.bullets.map(b => String(b).replace(/\s*\(\d+.*?\)\s*$/, '').trim()).filter(Boolean).slice(0, 6);
+      desc.hook = String(desc.hook).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
+      desc.why  = String(desc.why).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
+      desc.cta  = String(desc.cta).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
 
       editor.click();
       editor.focus();
