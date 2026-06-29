@@ -371,40 +371,38 @@ JSON only.`
         const trigger = triggers[colIndex];
         if (!trigger) return;
 
-        const r = trigger.getBoundingClientRect();
-        const ev = { bubbles: true, cancelable: true, view: window,
-          clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
-        trigger.dispatchEvent(new PointerEvent('pointerdown', ev));
-        trigger.dispatchEvent(new MouseEvent('mousedown', ev));
-        trigger.dispatchEvent(new PointerEvent('pointerup', ev));
-        trigger.dispatchEvent(new MouseEvent('mouseup', ev));
-        trigger.dispatchEvent(new MouseEvent('click', ev));
-        await sleep(rand(600, 900));
+        // Focus then click to open
+        if (!trigger.hasAttribute('tabindex')) trigger.setAttribute('tabindex', '-1');
+        trigger.focus();
+        await sleep(80);
+        trigger.click();
+        await sleep(rand(700, 1000));
 
-        // Fiverr option format: "3 DAYS DELIVERY" or "1 DAY DELIVERY"
-        const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
-        // Find any element with exact label text (no isVisible — options may be in scroll container)
-        // querySelectorAll returns document order so outermost (li/div) comes before inner spans
-        const opt = [...document.querySelectorAll('li, [role="option"], div, span, p')]
-          .find(el => el.textContent.trim().toUpperCase() === label && el.getBoundingClientRect().width > 0);
-
-        if (opt) {
-          opt.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-          await sleep(100);
-          const or = opt.getBoundingClientRect();
-          const cx = or.left + or.width / 2, cy = or.top + or.height / 2;
-          // elementFromPoint gives us the exact topmost element React sees on a real click
-          const target = document.elementFromPoint(cx, cy) || opt;
-          const oev = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy };
-          target.dispatchEvent(new PointerEvent('pointerover', oev));
-          target.dispatchEvent(new MouseEvent('mouseover', oev));
-          target.dispatchEvent(new PointerEvent('pointerdown', oev));
-          target.dispatchEvent(new MouseEvent('mousedown', oev));
-          target.dispatchEvent(new PointerEvent('pointerup', oev));
-          target.dispatchEvent(new MouseEvent('mouseup', oev));
-          target.dispatchEvent(new MouseEvent('click', oev));
-          await sleep(rand(400, 600));
+        // Keyboard navigation: ArrowDown × N (0=placeholder, 1=1DAY, 2=2DAYS, …, N=NDAYS)
+        // Dispatch on both activeElement and trigger to cover all focus scenarios
+        function kdown(key, code, keyCode) {
+          const opts = { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true, view: window };
+          const focused = document.activeElement;
+          if (focused && focused !== document.body) focused.dispatchEvent(new KeyboardEvent('keydown', opts));
+          trigger.dispatchEvent(new KeyboardEvent('keydown', opts));
         }
+        function kup(key, code, keyCode) {
+          const opts = { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true, view: window };
+          const focused = document.activeElement;
+          if (focused && focused !== document.body) focused.dispatchEvent(new KeyboardEvent('keyup', opts));
+          trigger.dispatchEvent(new KeyboardEvent('keyup', opts));
+        }
+
+        for (let n = 0; n < days; n++) {
+          kdown('ArrowDown', 'ArrowDown', 40);
+          await sleep(rand(90, 140));
+          kup('ArrowDown', 'ArrowDown', 40);
+          await sleep(rand(40, 70));
+        }
+        kdown('Enter', 'Enter', 13);
+        await sleep(100);
+        kup('Enter', 'Enter', 13);
+        await sleep(rand(400, 600));
       }
 
       const tiers = ['basic', 'standard', 'premium'];
