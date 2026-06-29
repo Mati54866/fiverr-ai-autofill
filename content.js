@@ -357,11 +357,10 @@ JSON only.`
 
       const deliveryDays = [3, 6, 9]; // basic, standard, premium
 
-      // Find deepest visible element whose full trimmed text is "N Day(s)"
+      // Trigger cells show "DELIVERY TIME" text with a chevron
       function findDeliveryTriggers() {
-        const candidates = [...document.querySelectorAll('div, button, span, p')]
-          .filter(el => isVisible(el) && /^\d+\s+days?$/i.test(el.textContent.trim()));
-        // Keep only deepest (no child matching same pattern) — avoid wrapping ancestors
+        const candidates = [...document.querySelectorAll('div, button, span, td')]
+          .filter(el => isVisible(el) && /^delivery\s+time$/i.test(el.textContent.trim()));
         return candidates
           .filter(el => !candidates.some(o => o !== el && el.contains(o)))
           .slice(0, 3);
@@ -380,13 +379,12 @@ JSON only.`
         trigger.click();
         await sleep(rand(600, 900));
 
-        // Snapshot existing day-text elements so we only look at NEW ones (portal items)
-        const target = new RegExp(`^${days}\\s+days?$`, 'i');
-        const allDayEls = [...document.querySelectorAll('div, li, span, p, [role="option"]')]
-          .filter(el => isVisible(el) && target.test(el.textContent.trim()));
+        // Fiverr option format: "3 DAYS DELIVERY" or "1 DAY DELIVERY"
+        const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
+        const opts = [...document.querySelectorAll('div, li, span, p, [role="option"], [role="listitem"]')]
+          .filter(el => isVisible(el) && el.textContent.trim().toUpperCase() === label);
+        const opt = opts.find(el => !opts.some(o => o !== el && el.contains(o))) || opts[0];
 
-        // Prefer elements that aren't the trigger itself
-        const opt = allDayEls.find(el => !el.isSameNode(trigger) && !el.contains(trigger));
         if (opt) {
           const or = opt.getBoundingClientRect();
           const oev = { bubbles: true, cancelable: true, view: window,
