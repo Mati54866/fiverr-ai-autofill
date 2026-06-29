@@ -383,23 +383,26 @@ JSON only.`
 
         // Fiverr option format: "3 DAYS DELIVERY" or "1 DAY DELIVERY"
         const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
-        const opts = [...document.querySelectorAll('li, [role="option"], div, span, p')]
-          .filter(el => isVisible(el) && el.textContent.trim().toUpperCase() === label);
-        const opt = opts.find(el => !opts.some(o => o !== el && el.contains(o))) || opts[0];
+        // Find any element with exact label text (no isVisible — options may be in scroll container)
+        // querySelectorAll returns document order so outermost (li/div) comes before inner spans
+        const opt = [...document.querySelectorAll('li, [role="option"], div, span, p')]
+          .find(el => el.textContent.trim().toUpperCase() === label && el.getBoundingClientRect().width > 0);
 
         if (opt) {
-          opt.scrollIntoView({ block: 'nearest' });
-          await sleep(80);
+          opt.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+          await sleep(100);
           const or = opt.getBoundingClientRect();
-          const oev = { bubbles: true, cancelable: true, view: window,
-            clientX: or.left + or.width / 2, clientY: or.top + or.height / 2 };
-          opt.dispatchEvent(new PointerEvent('pointerover', oev));
-          opt.dispatchEvent(new MouseEvent('mouseover', oev));
-          opt.dispatchEvent(new PointerEvent('pointerdown', oev));
-          opt.dispatchEvent(new MouseEvent('mousedown', oev));
-          opt.dispatchEvent(new PointerEvent('pointerup', oev));
-          opt.dispatchEvent(new MouseEvent('mouseup', oev));
-          opt.dispatchEvent(new MouseEvent('click', oev));
+          const cx = or.left + or.width / 2, cy = or.top + or.height / 2;
+          // elementFromPoint gives us the exact topmost element React sees on a real click
+          const target = document.elementFromPoint(cx, cy) || opt;
+          const oev = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy };
+          target.dispatchEvent(new PointerEvent('pointerover', oev));
+          target.dispatchEvent(new MouseEvent('mouseover', oev));
+          target.dispatchEvent(new PointerEvent('pointerdown', oev));
+          target.dispatchEvent(new MouseEvent('mousedown', oev));
+          target.dispatchEvent(new PointerEvent('pointerup', oev));
+          target.dispatchEvent(new MouseEvent('mouseup', oev));
+          target.dispatchEvent(new MouseEvent('click', oev));
           await sleep(rand(400, 600));
         }
       }
