@@ -374,24 +374,32 @@ JSON only.`
         const r = trigger.getBoundingClientRect();
         const ev = { bubbles: true, cancelable: true, view: window,
           clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
+        trigger.dispatchEvent(new PointerEvent('pointerdown', ev));
         trigger.dispatchEvent(new MouseEvent('mousedown', ev));
+        trigger.dispatchEvent(new PointerEvent('pointerup', ev));
         trigger.dispatchEvent(new MouseEvent('mouseup', ev));
-        trigger.click();
+        trigger.dispatchEvent(new MouseEvent('click', ev));
         await sleep(rand(600, 900));
 
         // Fiverr option format: "3 DAYS DELIVERY" or "1 DAY DELIVERY"
         const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
-        const opts = [...document.querySelectorAll('div, li, span, p, [role="option"], [role="listitem"]')]
+        const opts = [...document.querySelectorAll('li, [role="option"], div, span, p')]
           .filter(el => isVisible(el) && el.textContent.trim().toUpperCase() === label);
         const opt = opts.find(el => !opts.some(o => o !== el && el.contains(o))) || opts[0];
 
         if (opt) {
+          opt.scrollIntoView({ block: 'nearest' });
+          await sleep(80);
           const or = opt.getBoundingClientRect();
           const oev = { bubbles: true, cancelable: true, view: window,
             clientX: or.left + or.width / 2, clientY: or.top + or.height / 2 };
+          opt.dispatchEvent(new PointerEvent('pointerover', oev));
+          opt.dispatchEvent(new MouseEvent('mouseover', oev));
+          opt.dispatchEvent(new PointerEvent('pointerdown', oev));
           opt.dispatchEvent(new MouseEvent('mousedown', oev));
+          opt.dispatchEvent(new PointerEvent('pointerup', oev));
           opt.dispatchEvent(new MouseEvent('mouseup', oev));
-          opt.click();
+          opt.dispatchEvent(new MouseEvent('click', oev));
           await sleep(rand(400, 600));
         }
       }
