@@ -366,43 +366,57 @@ JSON only.`
           .slice(0, 3);
       }
 
+      // Call React's own onClick/onMouseDown handler directly via fiber props
+      function reactClick(el) {
+        for (let node = el; node; node = node.parentElement) {
+          const propsKey = Object.keys(node).find(k => /^__reactProps\$/.test(k));
+          if (!propsKey) continue;
+          const props = node[propsKey];
+          const handler = props.onClick || props.onMouseDown || props.onMouseUp;
+          if (!handler) continue;
+          const r = el.getBoundingClientRect();
+          handler({
+            preventDefault: () => {}, stopPropagation: () => {},
+            target: el, currentTarget: node, button: 0, buttons: 1,
+            clientX: r.left + r.width / 2, clientY: r.top + r.height / 2,
+            nativeEvent: new MouseEvent('click', { bubbles: true })
+          });
+          return true;
+        }
+        return false;
+      }
+
       async function selectDelivery(colIndex, days) {
         const triggers = findDeliveryTriggers();
         const trigger = triggers[colIndex];
         if (!trigger) return;
 
-        // Focus then click to open
-        if (!trigger.hasAttribute('tabindex')) trigger.setAttribute('tabindex', '-1');
-        trigger.focus();
-        await sleep(80);
-        trigger.click();
+        // Open dropdown — try React click first, then native
+        if (!reactClick(trigger)) trigger.click();
         await sleep(rand(700, 1000));
 
-        // Keyboard navigation: ArrowDown × N (0=placeholder, 1=1DAY, 2=2DAYS, …, N=NDAYS)
-        // Dispatch on both activeElement and trigger to cover all focus scenarios
-        function kdown(key, code, keyCode) {
-          const opts = { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true, view: window };
-          const focused = document.activeElement;
-          if (focused && focused !== document.body) focused.dispatchEvent(new KeyboardEvent('keydown', opts));
-          trigger.dispatchEvent(new KeyboardEvent('keydown', opts));
-        }
-        function kup(key, code, keyCode) {
-          const opts = { key, code, keyCode, which: keyCode, bubbles: true, cancelable: true, view: window };
-          const focused = document.activeElement;
-          if (focused && focused !== document.body) focused.dispatchEvent(new KeyboardEvent('keyup', opts));
-          trigger.dispatchEvent(new KeyboardEvent('keyup', opts));
-        }
+        // Find option by text — normalize whitespace to handle non-breaking spaces
+        const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
+        const normalize = t => t.replace(/[\s ]+/g, ' ').trim().toUpperCase();
+        const opt = [...document.querySelectorAll('li, [role="option"], div, span, p')]
+          .find(el => normalize(el.textContent) === label && el.getBoundingClientRect().width > 0);
 
-        for (let n = 0; n < days; n++) {
-          kdown('ArrowDown', 'ArrowDown', 40);
-          await sleep(rand(90, 140));
-          kup('ArrowDown', 'ArrowDown', 40);
-          await sleep(rand(40, 70));
+        if (opt) {
+          // Try React fiber call first (most reliable for React dropdowns)
+          const handled = reactClick(opt);
+          if (!handled) {
+            // Fallback: full pointer event chain
+            const or = opt.getBoundingClientRect();
+            const cx = or.left + or.width / 2, cy = or.top + or.height / 2;
+            const oev = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy };
+            opt.dispatchEvent(new PointerEvent('pointerdown', oev));
+            opt.dispatchEvent(new MouseEvent('mousedown', oev));
+            opt.dispatchEvent(new PointerEvent('pointerup', oev));
+            opt.dispatchEvent(new MouseEvent('mouseup', oev));
+            opt.dispatchEvent(new MouseEvent('click', oev));
+          }
+          await sleep(rand(400, 600));
         }
-        kdown('Enter', 'Enter', 13);
-        await sleep(100);
-        kup('Enter', 'Enter', 13);
-        await sleep(rand(400, 600));
       }
 
       const tiers = ['basic', 'standard', 'premium'];
