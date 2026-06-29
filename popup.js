@@ -11,9 +11,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 function toast(msg, err = false) {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.style.background = err ? '#1f0d0d' : '#081408';
-  el.style.borderColor = err ? '#3f1a1a' : '#1a4a1a';
-  el.style.color       = err ? '#f87171' : '#34c76e';
+  el.classList.toggle('err', err);
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2200);
 }
@@ -53,9 +51,12 @@ const KW_PLACEHOLDERS = [
 })();
 
 // Load all saved values
-chrome.storage.local.get(['faiKeywords', 'faiEnabled'], ({ faiKeywords, faiEnabled }) => {
-  if (faiKeywords) document.getElementById('fai-kw').value = faiKeywords;
-  document.getElementById('faiEnabled').checked = faiEnabled !== false;
+chrome.storage.local.get(['faiKeywords', 'faiEnabled', 'faiName', 'faiYears', 'faiCountry'], (d) => {
+  if (d.faiKeywords) document.getElementById('fai-kw').value = d.faiKeywords;
+  if (d.faiName)    document.getElementById('fai-name').value = d.faiName;
+  if (d.faiYears)   document.getElementById('fai-years').value = d.faiYears;
+  if (d.faiCountry) document.getElementById('fai-country').value = d.faiCountry;
+  document.getElementById('faiEnabled').checked = d.faiEnabled !== false;
 });
 
 chrome.storage.sync.get(['groqKeys', 'model', 'temperature'], ({ groqKeys, model, temperature }) => {
@@ -71,11 +72,18 @@ chrome.storage.sync.get(['groqKeys', 'model', 'temperature'], ({ groqKeys, model
   }
 });
 
-// Save keywords
+// Save profile + keywords
 document.getElementById('saveKw').addEventListener('click', () => {
-  const kw = document.getElementById('fai-kw').value.trim();
+  const kw      = document.getElementById('fai-kw').value.trim();
+  const name    = document.getElementById('fai-name').value.trim();
+  const years   = document.getElementById('fai-years').value.trim();
+  const country = document.getElementById('fai-country').value.trim();
   if (!kw) { toast('Enter at least one keyword', true); return; }
-  chrome.storage.local.set({ faiKeywords: kw }, () => toast('◆ Keywords saved'));
+  const data = { faiKeywords: kw };
+  if (name)    data.faiName    = name;
+  if (years)   data.faiYears   = years;
+  if (country) data.faiCountry = country;
+  chrome.storage.local.set(data, () => toast('◆ Profile saved'));
 });
 
 // Toggle: show/hide buttons on Fiverr

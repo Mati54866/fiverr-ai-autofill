@@ -1,6 +1,6 @@
-# Fiverr Gig AI Autofill
+# Fiverr Filla
 
-A Chrome extension that uses **Groq AI** to generate and autofill your Fiverr gig — title, tags, packages, description, FAQs, and buyer requirements — page by page.
+A Chrome extension that uses **Groq AI** to generate and autofill your entire Fiverr presence — gig pages, seller profile, work experience, bio, and skills — all from one click.
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-green?style=for-the-badge)
@@ -11,15 +11,26 @@ A Chrome extension that uses **Groq AI** to generate and autofill your Fiverr gi
 
 ## Features
 
-- **AI-Generated Title** — Compelling "I will..." titles under 80 characters
-- **Auto Tags** — 5 relevant gig tags typed naturally into Fiverr's tag input
-- **3-Tier Packages** — Basic / Standard / Premium with names, descriptions, and prices
-- **Formatted Description** — Hook + bullets + CTA, 1000–1200 chars, injected into Fiverr's Quill editor
-- **5 FAQs** — Unique buyer-focused Q&A pairs, auto-added one by one
-- **Buyer Requirements** — Auto-fills the requirements textarea and marks it required
-- **Human-like Typing** — Character-by-character input with natural delays (anti-detection)
-- **Toggle On/Off** — Hide all AI buttons from the page with one switch in the popup
-- **Multi-key Rotation** — Add up to 3 Groq API keys; auto-rotates on rate limit
+### Gig Editor
+- **AI Title** — Compelling "I will..." titles under 80 characters
+- **Auto Tags** — 5 relevant gig search tags
+- **3-Tier Packages** — Basic / Standard / Premium with names, descriptions, prices
+- **Formatted Description** — Hook + bullets + CTA, 1000–1200 chars, injected into Fiverr's editor
+- **5 FAQs** — Buyer-focused Q&A pairs, auto-added one by one
+- **Buyer Requirements** — Auto-fills and marks required
+- **Per-Gig Niche Input** — A niche bar is injected directly on each gig page; type a different niche per gig without touching the popup
+
+### Seller Profile
+- **Bio / About** — Professional seller bio personalized with your name, years of experience, and country
+- **Work Experience** — Full entry (title, company, employment type, date, description) auto-filled and submitted
+- **Skills** — Picks 6 relevant skills from Fiverr's actual skill database, auto-selects each with experience level
+
+### General
+- **Stop Button** — Every AI button becomes a Stop button while running; click to abort mid-task
+- **Human-like Typing** — Character-by-character input with natural delays
+- **Multi-key Rotation** — Up to 3 Groq API keys, auto-rotated on rate limit
+- **Bundled Skill & Company Lists** — 360+ real Fiverr skills and common companies ship with the extension — no fetching required
+- **Profile Info** — Save your name, years of experience, and country once; used across bio, work exp, and skills generation
 
 ---
 
@@ -42,23 +53,27 @@ A Chrome extension that uses **Groq AI** to generate and autofill your Fiverr gi
 
 ## Setup
 
-1. Click the extension icon to open the popup
-2. Go to the **API Keys** tab
-3. Paste your Groq API key (get one free at [console.groq.com](https://console.groq.com))
-4. Click **◆ Save Keys**
-
-No config files needed — everything is stored in the extension's secure storage.
+1. Click the extension icon → **API Keys** tab
+2. Paste your Groq API key (free at [console.groq.com](https://console.groq.com))
+3. Click **◆ Save Keys**
+4. Go to **Keywords** tab → fill in your profile info (name, years, country) and profile niche
+5. Click **◆ Save Profile**
 
 ---
 
 ## How to Use
 
-1. Open the popup → **Keywords** tab → type your gig niche
-   > Example: `ibkr bot, python, algo trading, metatrader`
-2. Click **◆ Save Keywords**
-3. Go to Fiverr → **Selling → Gigs → Create a New Gig**
-4. On each page you'll see small **◆ Generate** buttons next to each field
-5. Click them to generate and autofill — review, then **Save & Continue**
+### Gig Pages
+1. Go to **Selling → Gigs → Create a New Gig** (or edit existing)
+2. A **◆ Niche** bar appears at the top of the editor — type your gig niche there
+   > e.g. `logo design, branding, vector art`
+3. Click any **◆ Generate** button to fill that field
+4. Review and click **Save & Continue**
+
+### Profile Page (`fiverr.com/sellers/.../edit`)
+- **◆ Generate About** — fills your bio section
+- **◆ Generate Work Experience** — opens the modal and fills every field automatically
+- **◆ Add Skills** — selects 6 relevant skills from Fiverr's dropdown
 
 ### Pages Supported
 
@@ -67,7 +82,10 @@ No config files needed — everything is stored in the extension's secure storag
 | Overview | Title + 5 Tags |
 | Pricing | Package names, descriptions, prices |
 | Description & FAQ | Formatted description + 5 FAQs |
-| Requirements | Buyer requirements textarea |
+| Requirements | Buyer requirements |
+| Profile → About | Bio (personalized) |
+| Profile → Work Experience | Full entry with company, dates, description |
+| Profile → Skills | 6 relevant skills with experience level |
 
 ---
 
@@ -75,12 +93,16 @@ No config files needed — everything is stored in the extension's secure storag
 
 ```
 fiverr-ai-autofill/
-├── manifest.json     # MV3 config
-├── background.js     # Service worker — Groq API calls, key rotation
-├── content.js        # Injected into Fiverr — generate buttons + field filling
-├── styles.css        # Field button styles
-├── popup.html        # Popup UI — Keywords, API Keys, Model tabs
-├── popup.js          # Popup logic
+├── manifest.json       # MV3 config — extension name, permissions
+├── background.js       # Service worker — Groq API calls, key rotation
+├── content.js          # Injected into Fiverr — all AI buttons and automation
+├── styles.css          # Injected button and niche bar styles
+├── popup.html          # Popup UI — Profile, API Keys, Model tabs
+├── popup.js            # Popup logic — save/load profile and keys
+├── fetch-lists.js      # One-time console script to fetch skills from Fiverr API
+├── data/
+│   ├── skills.json     # 360+ real Fiverr skills (bundled)
+│   └── companies.json  # Common company names for work experience
 └── icons/
     ├── icon16.png
     ├── icon48.png
@@ -92,16 +114,17 @@ fiverr-ai-autofill/
 ## How It Works
 
 ```
-User saves keywords in popup
+User fills niche bar on gig page (or profile niche in popup)
         ↓
-◆ Generate button clicked on Fiverr page
+◆ Generate button clicked
         ↓
-content.js builds a prompt with the keywords
+content.js builds prompt with niche + profile info (name, years, country)
         ↓
 background.js calls Groq API (llama-3.3-70b-versatile)
         ↓
 Response is typed character-by-character into Fiverr's fields
-(React-compatible events fired so Fiverr registers real input)
+using React-compatible events (nativeInputValueSetter + InputEvent)
+so Fiverr registers it as real user input
 ```
 
 ---
@@ -112,16 +135,17 @@ Response is typed character-by-character into Fiverr's fields
 |---|---|
 | Extension | Chrome MV3, Vanilla JS |
 | AI | Groq Cloud — `llama-3.3-70b-versatile` |
-| Styling | Pure CSS, dark theme |
-| Storage | `chrome.storage.sync` (keys) + `chrome.storage.local` (keywords/settings) |
+| Storage | `chrome.storage.sync` (keys/model) + `chrome.storage.local` (profile/skills) |
+| Skill data | Fiverr autocomplete API (pre-fetched, bundled as JSON) |
 
 ---
 
 ## Notes
 
-- API keys are stored in `chrome.storage.sync` — only sent directly to `api.groq.com`, never anywhere else
+- API keys are stored in `chrome.storage.sync` — sent only to `api.groq.com`, never anywhere else
 - Groq's free tier handles hundreds of requests per day at no cost
-- The toggle in the popup lets you hide all AI buttons if you want a clean Fiverr experience
+- The niche bar on gig pages is per-session — it doesn't persist between page loads (intentional, since each gig is different)
+- Skills and companies are bundled with the extension — no internet fetch needed on first run
 
 ---
 

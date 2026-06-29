@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Gig AI Autofill</title>
+<title>Fiverr Filla</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,164 +15,169 @@ body {
   line-height: 1.4;
 }
 
+/* Header */
 .header {
-  padding: 16px 16px 14px;
-  border-bottom: 1px solid #1a1a1a;
-  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: #111;
+  border-bottom: 1px solid #1e1e1e;
+  display: flex; align-items: center; gap: 11px;
 }
 .logo {
-  width: 38px; height: 38px;
-  background: linear-gradient(135deg, #1DBF73, #0d7a49);
-  border-radius: 11px;
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #1DBF73, #0d9a5a);
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 19px; color: #fff;
-  box-shadow: 0 3px 14px rgba(29,191,115,0.38);
+  font-size: 17px; color: #fff;
+  box-shadow: 0 2px 12px rgba(29,191,115,0.35);
   flex-shrink: 0;
 }
 .header-info { flex: 1; }
-.header-title { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-.header-sub { font-size: 11px; color: #555; margin-top: 2px; }
+.header-title { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -0.2px; }
+.header-sub { font-size: 10.5px; color: #555; margin-top: 1px; }
 .status-pill {
   display: flex; align-items: center; gap: 5px;
-  padding: 5px 11px; border-radius: 20px;
-  background: #081408; border: 1px solid #193419;
-  font-size: 11px; font-weight: 600; color: #34c76e; flex-shrink: 0;
+  padding: 4px 10px; border-radius: 20px;
+  background: #0a1f12; border: 1.5px solid #1DBF73;
+  font-size: 10.5px; font-weight: 600; color: #1DBF73; flex-shrink: 0;
 }
-.status-dot { width: 6px; height: 6px; background: #34c76e; border-radius: 50%; box-shadow: 0 0 5px #34c76e; }
+.status-dot { width: 6px; height: 6px; background: #1DBF73; border-radius: 50%; box-shadow: 0 0 5px #1DBF73; }
 
-.tabs { display: flex; border-bottom: 1px solid #1a1a1a; }
+/* Tabs */
+.tabs { display: flex; background: #111; border-bottom: 1px solid #1e1e1e; }
 .tab {
-  flex: 1; padding: 10px 6px;
+  flex: 1; padding: 9px 6px;
   text-align: center; cursor: pointer;
-  font-size: 12px; font-weight: 500; color: #666;
+  font-size: 11.5px; font-weight: 500; color: #555;
   border-bottom: 2px solid transparent;
   transition: all 0.15s; user-select: none;
 }
-.tab:hover { color: #999; }
-.tab.active { color: #1DBF73; border-bottom-color: #1DBF73; font-weight: 600; }
+.tab:hover { color: #1DBF73; }
+.tab.active { color: #1DBF73; border-bottom-color: #1DBF73; font-weight: 700; }
 
-.panel { display: none; padding: 14px; }
+/* Panels */
+.panel { display: none; padding: 12px 14px 16px; }
 .panel.active { display: block; }
 
+/* Cards */
 .card {
-  background: #111; border: 1px solid #222;
-  border-radius: 10px; padding: 13px 14px; margin-bottom: 10px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 12px;
+  padding: 13px 14px;
+  margin-bottom: 10px;
 }
 .card:last-child { margin-bottom: 0; }
 .card-title {
-  font-size: 10px; font-weight: 700; color: #585858;
-  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  font-size: 10px; font-weight: 700; color: #1DBF73;
+  text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 11px;
 }
 
+/* Inputs */
 .inp {
-  width: 100%; background: #0d0d0d; border: 1px solid #2e2e2e;
-  border-radius: 7px; color: #e0e0e0; padding: 7px 10px;
-  font-size: 12.5px; outline: none; font-family: inherit; transition: border 0.15s;
+  width: 100%;
+  background: #0d0d0d;
+  border: 1.5px solid #222;
+  border-radius: 10px;
+  color: #e0e0e0;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-.inp:focus { border-color: #1DBF73; }
-.inp::placeholder { color: #484848; }
+.inp:focus {
+  border-color: #1DBF73;
+  box-shadow: 0 0 0 3px rgba(29,191,115,0.10);
+}
+.inp::placeholder { color: #555; }
 
-textarea.inp { resize: none; height: 58px; line-height: 1.5; }
+textarea.inp { resize: none; height: 60px; line-height: 1.5; }
 
 .field-label {
-  font-size: 11px; color: #666; margin-bottom: 5px;
+  font-size: 11px; color: #555; margin-bottom: 5px;
   display: flex; justify-content: space-between; align-items: center;
+  font-weight: 500;
 }
 .badge {
-  font-size: 10px; padding: 1px 7px; border-radius: 4px;
-  background: #161616; border: 1px solid #2a2a2a; color: #555;
+  font-size: 9.5px; padding: 2px 8px; border-radius: 20px;
+  background: #0a1f12; border: 1px solid #1a4a2a; color: #1DBF73;
+  font-weight: 600;
 }
 
+/* Buttons */
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
 .btn {
   flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  padding: 9px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
   cursor: pointer; font-family: inherit; transition: all 0.15s; border: none;
 }
-.btn-primary { background: #1DBF73; color: #fff; }
-.btn-primary:hover { background: #17a862; }
-.btn-secondary { background: #141414; border: 1px solid #232323; color: #666; }
-.btn-secondary:hover { border-color: #3a3a3a; color: #ccc; }
-
-/* Toggle switch */
-.toggle-row {
-  display: flex; align-items: center; justify-content: space-between;
+.btn-primary {
+  background: #1DBF73; color: #fff;
+  box-shadow: 0 2px 10px rgba(29,191,115,0.28);
 }
-.toggle-label { font-size: 13px; color: #c8c8c8; }
-.toggle-sub { font-size: 11px; color: #666; margin-top: 2px; }
+.btn-primary:hover { background: #17a862; box-shadow: 0 4px 16px rgba(29,191,115,0.36); transform: translateY(-1px); }
+.btn-secondary { background: #161616; border: 1px solid #252525; color: #666; }
+.btn-secondary:hover { border-color: #1DBF73; color: #1DBF73; }
+
+/* Toggle */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; }
+.toggle-label { font-size: 13px; color: #ccc; font-weight: 500; }
+.toggle-sub { font-size: 11px; color: #555; margin-top: 2px; }
 .switch { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider {
-  position: absolute; inset: 0; background: #222; border-radius: 21px;
-  cursor: pointer; transition: 0.2s; border: 1px solid #2a2a2a;
+  position: absolute; inset: 0; background: #252525; border-radius: 21px;
+  cursor: pointer; transition: 0.2s; border: 1px solid #333;
 }
 .slider:before {
   content: ''; position: absolute;
   width: 15px; height: 15px; left: 2px; top: 2px;
   background: #555; border-radius: 50%; transition: 0.2s;
 }
-input:checked + .slider { background: #0d2e1a; border-color: #1DBF73; }
+input:checked + .slider { background: #0a1f12; border-color: #1DBF73; }
 input:checked + .slider:before { background: #1DBF73; transform: translateX(17px); }
-
-/* Row */
-.row {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 0; border-bottom: 1px solid #181818;
-}
-.row:last-child { border-bottom: none; padding-bottom: 0; }
-.row:first-child { padding-top: 0; }
-.row-label { color: #bbb; font-size: 12.5px; }
-.row-val { font-size: 11px; color: #1DBF73; }
-
-/* Steps */
-.steps { display: flex; flex-direction: column; gap: 9px; }
-.step { display: flex; align-items: flex-start; gap: 10px; }
-.step-num {
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #081408; border: 1px solid #1DBF73;
-  color: #1DBF73; font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; margin-top: 1px;
-}
-.step-text { font-size: 12px; color: #666; line-height: 1.45; }
-.step-text strong { color: #b0b0b0; }
 
 /* Key row */
 .key-row { position: relative; margin-bottom: 8px; }
 .key-row:last-of-type { margin-bottom: 0; }
 .eye-btn {
-  position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: #555; cursor: pointer; font-size: 13px; padding: 2px;
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #444; cursor: pointer; font-size: 13px; padding: 2px;
 }
-.eye-btn:hover { color: #999; }
-.key-row .inp { padding-right: 32px; }
+.eye-btn:hover { color: #1DBF73; }
+.key-row .inp { padding-right: 34px; }
 
 select.inp {
   cursor: pointer; appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23404040'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%231DBF73'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; padding-right: 30px;
 }
 
 .temp-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
 .temp-row input[type=range] { flex: 1; accent-color: #1DBF73; cursor: pointer; }
 .temp-val { font-size: 13px; font-weight: 700; color: #1DBF73; min-width: 28px; text-align: right; }
 
+/* Footer */
 .footer {
   padding: 10px 16px; border-top: 1px solid #1e1e1e;
+  background: #111;
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 11px; color: #555;
+  font-size: 11px; color: #444;
 }
-.footer a { color: #666; text-decoration: none; transition: color 0.15s; }
+.footer a { color: #555; text-decoration: none; transition: color 0.15s; }
 .footer a:hover { color: #1DBF73; }
 .footer-links { display: flex; gap: 12px; }
 
+/* Toast */
 .toast {
   position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
-  background: #081408; border: 1px solid #1a4a1a; color: #34c76e;
-  border-radius: 8px; padding: 6px 16px; font-size: 12px; font-weight: 600;
+  background: #0a1f12; border: 1px solid #1DBF73; color: #1DBF73;
+  border-radius: 20px; padding: 7px 18px; font-size: 12px; font-weight: 600;
   opacity: 0; transition: opacity 0.18s; pointer-events: none; white-space: nowrap; z-index: 1000;
+  box-shadow: 0 4px 16px rgba(29,191,115,0.20);
 }
 .toast.show { opacity: 1; }
+.toast.err { background: #1f0a0a; border-color: #c0392b; color: #f87171; box-shadow: 0 4px 16px rgba(192,57,43,0.20); }
 </style>
 </head>
 <body>
@@ -180,7 +185,7 @@ select.inp {
 <div class="header">
   <div class="logo">✦</div>
   <div class="header-info">
-    <div class="header-title">Gig AI Autofill</div>
+    <div class="header-title">Fiverr Filla</div>
     <div class="header-sub">Powered by Groq AI</div>
   </div>
   <div class="status-pill"><span class="status-dot"></span>Active</div>
@@ -195,15 +200,27 @@ select.inp {
 <!-- Keywords -->
 <div class="panel active" id="tab-kw">
   <div class="card">
-    <div class="card-title">Your Gig Keywords</div>
-    <div class="field-label"><span>Describe your gig niche</span><span class="badge">any category</span></div>
-    <textarea class="inp" id="fai-kw" placeholder="e.g. logo design, branding, vector art"></textarea>
-    <div class="btn-row">
-      <button class="btn btn-primary" id="saveKw">◆ Save Keywords</button>
-    </div>
+    <div class="card-title">Your Profile</div>
+    <div class="field-label"><span>Full Name</span><span class="badge">for bio</span></div>
+    <input type="text" class="inp" id="fai-name" placeholder="e.g. Nadir Ali Khan" style="margin-bottom:9px">
+    <div class="field-label"><span>Years of Experience</span></div>
+    <input type="number" class="inp" id="fai-years" placeholder="e.g. 5" min="1" max="50" style="margin-bottom:9px;width:100px">
+    <div class="field-label"><span>Country</span><span class="badge">optional</span></div>
+    <input type="text" class="inp" id="fai-country" placeholder="e.g. Pakistan">
   </div>
 
   <div class="card">
+    <div class="card-title">Profile Niche</div>
+    <div class="field-label"><span>Used for bio, work exp & skills</span><span class="badge">profile page</span></div>
+    <textarea class="inp" id="fai-kw" placeholder="e.g. algorithmic trading, MT5 bots, Python automation"></textarea>
+    <p style="font-size:10.5px;color:#555;margin-top:6px;line-height:1.45">For gig pages, each gig has its own niche field injected directly on the editor — no need to update this per gig.</p>
+  </div>
+
+  <div class="btn-row" style="margin-top:0">
+    <button class="btn btn-primary" id="saveKw">◆ Save Profile</button>
+  </div>
+
+  <div class="card" style="margin-top:10px;">
     <div class="card-title">Extension</div>
     <div class="toggle-row">
       <div>
@@ -221,14 +238,6 @@ select.inp {
      style="display:block;margin:0;padding:9px 14px;background:#1DBF73;color:#fff;font-size:12px;font-weight:600;border:none;border-radius:8px;cursor:pointer;text-align:center;text-decoration:none;">
     Open Fiverr Gig Editor →
   </a>
-
-  <div class="card" style="margin-top:10px;">
-    <div class="card-title">Pages Supported</div>
-    <div class="row"><div class="row-label">Overview</div><div class="row-val">Title + Tags</div></div>
-    <div class="row"><div class="row-label">Pricing</div><div class="row-val">Packages + Prices</div></div>
-    <div class="row"><div class="row-label">Description & FAQ</div><div class="row-val">Description + 5 FAQs</div></div>
-    <div class="row"><div class="row-label">Requirements</div><div class="row-val">Buyer Questions</div></div>
-  </div>
 </div>
 
 <!-- API Keys -->
