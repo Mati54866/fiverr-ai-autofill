@@ -234,6 +234,16 @@ function injectNicheBar() {
 
   // Rotate placeholder examples
   const nicheInput = bar.querySelector('#fai-gig-niche');
+
+  // Restore saved niche for this gig session
+  const saved = sessionStorage.getItem('faiGigNiche');
+  if (saved) nicheInput.value = saved;
+
+  // Persist on every keystroke so it survives wizard page navigation
+  nicheInput.addEventListener('input', () => {
+    sessionStorage.setItem('faiGigNiche', nicheInput.value);
+  });
+
   const examples = [
     'logo design, branding, vector art',
     'algo trading bot, MT5, Pine Script',
