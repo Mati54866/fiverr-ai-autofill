@@ -336,7 +336,7 @@ function injectPage2() {
 }
 Rules:
 - Names: creative tier-appropriate names (NOT Basic/Standard/Premium). E.g. Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate. Each must be DIFFERENT.
-- Description: exactly one sentence, under 100 characters, SPECIFIC to ${kw}. State clearly what the buyer gets — tools used, scope, deliverable format. No filler.
+- Description: exactly one sentence, under 90 characters, SPECIFIC to ${kw}. State clearly what the buyer gets — tools used, scope, deliverable format. No filler.
 - Prices: realistic for the gig type and tier (basic cheapest, premium highest).
 - Escalate scope between tiers: basic = minimal, standard = full, premium = everything + extras.
 JSON only.`
@@ -399,7 +399,7 @@ JSON only.`
         if (!pkg) continue;
         setMsg(`Filling ${tiers[i]}…`, 'info');
         if (freshNames[i]) { await humanType(freshNames[i], pkg.name); await humanDelay(); }
-        if (freshDescs[i]) { await humanType(freshDescs[i], pkg.description.trim().slice(0, 100)); await humanDelay(); }
+        if (freshDescs[i]) { await humanType(freshDescs[i], pkg.description.trim().slice(0, 90)); await humanDelay(); }
         if (priceInputs[i]) { await humanType(priceInputs[i], String(pkg.price)); await humanDelay(); }
         await selectDelivery(i, deliveryDays[i]);
       }
