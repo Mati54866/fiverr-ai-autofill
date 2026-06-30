@@ -336,7 +336,7 @@ function injectPage2() {
 }
 Rules:
 - Names: creative tier-appropriate names (NOT Basic/Standard/Premium). E.g. Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate. Each must be DIFFERENT.
-- Description: exactly one sentence, under 90 characters, SPECIFIC to ${kw}. State clearly what the buyer gets — tools used, scope, deliverable format. No filler.
+- Description: exactly one sentence, 70-90 characters, SPECIFIC to ${kw}. State what the buyer gets — tools, scope, deliverable. Must be a full sentence, no fragments.
 - Prices: realistic for the gig type and tier (basic cheapest, premium highest).
 - Escalate scope between tiers: basic = minimal, standard = full, premium = everything + extras.
 JSON only.`
@@ -355,44 +355,6 @@ JSON only.`
 
       if (!freshNames.length) throw new Error('Package fields not found — scroll to the pricing table first');
 
-      const deliveryDays = [3, 6, 9]; // basic, standard, premium
-
-      // Trigger cells show "DELIVERY TIME" text with a chevron
-      function findDeliveryTriggers() {
-        const candidates = [...document.querySelectorAll('div, button, span, td')]
-          .filter(el => isVisible(el) && /^delivery\s+time$/i.test(el.textContent.trim()));
-        return candidates
-          .filter(el => !candidates.some(o => o !== el && el.contains(o)))
-          .slice(0, 3);
-      }
-
-      async function selectDelivery(colIndex, days) {
-        const triggers = findDeliveryTriggers();
-        const trigger = triggers[colIndex];
-        if (!trigger) return;
-
-        trigger.click();
-        await sleep(rand(1400, 1800));
-
-        const label = days === 1 ? '1 DAY DELIVERY' : `${days} DAYS DELIVERY`;
-        const normalize = t => t.replace(/\s+/g, ' ').trim().toUpperCase();
-
-        // Find the deepest element whose full text matches the label
-        const candidates = [...document.querySelectorAll('li, [role="option"], [role="listbox"] > *, div, span')]
-          .filter(el => {
-            const r = el.getBoundingClientRect();
-            return r.width > 0 && r.height > 0;
-          });
-        const opt = candidates.find(el => normalize(el.textContent) === label);
-
-        if (opt) {
-          opt.scrollIntoView({ block: 'nearest' });
-          await sleep(80);
-          opt.click();
-          await sleep(rand(400, 600));
-        }
-      }
-
       const tiers = ['basic', 'standard', 'premium'];
       for (let i = 0; i < 3; i++) {
         const pkg = pkgs[tiers[i]];
@@ -401,7 +363,6 @@ JSON only.`
         if (freshNames[i]) { await humanType(freshNames[i], pkg.name); await humanDelay(); }
         if (freshDescs[i]) { await humanType(freshDescs[i], pkg.description.trim().slice(0, 90)); await humanDelay(); }
         if (priceInputs[i]) { await humanType(priceInputs[i], String(pkg.price)); await humanDelay(); }
-        await selectDelivery(i, deliveryDays[i]);
       }
       setMsg('Packages done!', 'success');
     });
