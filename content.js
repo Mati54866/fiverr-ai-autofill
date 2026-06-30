@@ -336,7 +336,7 @@ function injectPage2() {
 }
 Rules:
 - Names: creative tier-appropriate names (NOT Basic/Standard/Premium). E.g. Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate. Each must be DIFFERENT.
-- Description: exactly one sentence, 70-90 characters, SPECIFIC to ${kw}. State what the buyer gets — tools, scope, deliverable. Must be a full sentence, no fragments.
+- Description: one sentence, EXACTLY 75-90 characters long (count carefully). Must describe what the buyer receives, tools used, and deliverable. Example (82 chars): "I'll build a Chrome extension with popup UI, content script, and manifest V3." Write at this length — do NOT write short fragments.
 - Prices: realistic for the gig type and tier (basic cheapest, premium highest).
 - Escalate scope between tiers: basic = minimal, standard = full, premium = everything + extras.
 JSON only.`
