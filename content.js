@@ -969,18 +969,20 @@ function injectWorkExp() {
     const companyList = stored.faiCompanies?.length > 0
       ? stored.faiCompanies
       : ['LinkedIn', 'Upwork', 'Fiverr', 'TradingView', 'Freelancer'];
-    const companyStr = companyList.slice(0, 60).join(', ');
+    // Shuffle so AI gets a varied ordering each call — prevents always picking the first company
+    const shuffled = [...companyList].sort(() => Math.random() - 0.5);
+    const companyStr = shuffled.slice(0, 60).join(', ');
 
     setStatus('⟳ Generating entry…');
     const p = await getProfile();
     const ctx = [p.faiName && `Name: ${p.faiName}`, p.faiYears && `${p.faiYears} years experience`, p.faiCountry && `Based in ${p.faiCountry}`].filter(Boolean).join(', ');
     const raw = await ask(`Niche: ${kw}`,
-      `Create one realistic freelance work experience entry for a Fiverr seller in: ${kw}.${ctx ? '\nFreelancer: ' + ctx + '.' : ''}
+      `Create one realistic freelance work experience entry for a freelancer specialising in: ${kw}.${ctx ? '\nFreelancer: ' + ctx + '.' : ''}
 Niche: ${kw}
 Return ONLY valid JSON:
 {
-  "title": "Job title (e.g. Algorithmic Trading Bot Developer)",
-  "company": "Pick the single best match from this exact list: ${companyStr}",
+  "title": "Job title relevant to the niche",
+  "company": "Pick ONE company from this list that fits best as the platform or employer — do NOT default to the first item, pick whichever suits the niche: ${companyStr}",
   "currentlyWorking": true,
   "description": "Specific achievements, tools used, results. Max 600 chars. No markdown."
 }
