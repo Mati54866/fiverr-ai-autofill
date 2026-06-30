@@ -450,12 +450,12 @@ Rules:
       await sleep(80);
 
       const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const devHtml  = desc.develop.map(b => `<li>${esc(b)}</li>`).join('');
-      const whyHtml  = desc.why.map(b => `<p>✓ ${esc(b)}</p>`).join('');
+      const devHtml = desc.develop.map(b => `<li>${esc(b)}</li>`).join('');
+      const whyHtml = desc.why.map(b => `<li>${esc(b)}</li>`).join('');
       const html = `<p>${esc(desc.hook)}</p><p><br></p>`
         + `<p>${esc(desc.intro)}</p><p><br></p>`
         + `<p><strong>I can develop:</strong></p><ul>${devHtml}</ul><p><br></p>`
-        + `<p><strong>Why choose me?</strong></p>${whyHtml}<p><br></p>`
+        + `<p><strong>Why choose me?</strong></p><ul>${whyHtml}</ul><p><br></p>`
         + `<p>${esc(desc.closing)}</p><p><br></p>`
         + `<p>${esc(desc.cta)}</p>`;
 
