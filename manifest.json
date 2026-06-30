@@ -3,7 +3,7 @@
   "name": "Fiverr Filla",
   "version": "1.0.0",
   "description": "AI-powered autofill for Fiverr gig titles, descriptions, packages, FAQs, bio, work experience, and skills using Groq.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage"],
   "host_permissions": [
     "https://www.fiverr.com/*",
     "https://api.groq.com/*"
