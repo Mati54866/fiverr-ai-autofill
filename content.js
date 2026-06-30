@@ -408,29 +408,34 @@ function injectPage3() {
         `Write a Fiverr gig description for: ${kw}. Return ONLY valid JSON with these exact keys:
 {
   "hook": "...",
-  "bullets": ["...", "...", "...", "...", "...", "..."],
-  "why": "...",
+  "intro": "...",
+  "develop": ["...", "...", "...", "...", "...", "...", "...", "..."],
+  "why": ["...", "...", "...", "...", "...", "..."],
+  "closing": "...",
   "cta": "..."
 }
 Rules:
-- hook: ONE short punchy sentence, max 100 chars. A tagline that grabs attention. No "I will".
-- bullets: exactly 6 items. Each is 10-14 words describing a specific deliverable or service. No duplicates.
-- why: 4 full sentences, 380-450 chars. Cover years of experience, turnaround speed, quality standards, revision policy, and post-delivery support. Be specific and detailed.
-- cta: one direct sentence urging the buyer to order, 70-90 chars.
-- Weave keywords naturally: ${kw}
-- CRITICAL: why must be 380+ chars with detailed specifics. Write LONG detailed sentences for why only.
+- hook: Question the buyer is asking + "You're in the right place!" — 1 sentence, max 110 chars. E.g. "Looking for a custom Chrome extension to automate tasks? You're in the right place!"
+- intro: 1-2 sentences about your experience and who you build for. Mention years and client types.
+- develop: exactly 8 specific things you can build/deliver for this niche. Short phrases, 4-8 words each. Diverse and specific to ${kw}.
+- why: exactly 6 short selling points. 4-7 words each. Start with action words or adjectives. E.g. "Clean, scalable, well-documented code", "Fast delivery with clear communication".
+- closing: 1-2 sentences wrapping up the offer. Invite them to order.
+- cta: one direct action sentence, 60-80 chars.
+- Weave keywords from: ${kw}
 - Output JSON only, no markdown, no char counts.`
       );
 
       let desc;
       try { desc = JSON.parse(data.match(/\{[\s\S]*\}/)?.[0]); }
       catch { throw new Error('Could not parse description — try again'); }
-      if (!desc?.hook || !Array.isArray(desc.bullets)) throw new Error('Bad description format — try again');
-      // Sanitise: ensure bullets are plain strings, strip any char-count notes AI may have added
-      desc.bullets = desc.bullets.map(b => String(b).replace(/\s*\(\d+.*?\)\s*$/, '').trim()).filter(Boolean).slice(0, 6);
-      desc.hook = String(desc.hook).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
-      desc.why  = String(desc.why).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
-      desc.cta  = String(desc.cta).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
+      if (!desc?.hook || !Array.isArray(desc.develop)) throw new Error('Bad description format — try again');
+      const clean = s => String(s).replace(/\s*\(\d+.*?\)\s*/g, '').trim();
+      desc.hook    = clean(desc.hook);
+      desc.intro   = clean(desc.intro || '');
+      desc.develop = (desc.develop || []).map(b => clean(b)).filter(Boolean).slice(0, 10);
+      desc.why     = (desc.why || []).map(b => clean(b)).filter(Boolean).slice(0, 6);
+      desc.closing = clean(desc.closing || '');
+      desc.cta     = clean(desc.cta || '');
 
       editor.click();
       editor.focus();
@@ -444,12 +449,14 @@ Rules:
       editor.focus();
       await sleep(80);
 
-      // Build and insert full HTML in one shot — avoids Quill re-render cursor loss
       const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const bHtml = desc.bullets.map(b => `<li>${esc(b)}</li>`).join('');
+      const devHtml  = desc.develop.map(b => `<li>${esc(b)}</li>`).join('');
+      const whyHtml  = desc.why.map(b => `<p>✓ ${esc(b)}</p>`).join('');
       const html = `<p>${esc(desc.hook)}</p><p><br></p>`
-        + `<p><strong>What You Get:</strong></p><ul>${bHtml}</ul><p><br></p>`
-        + `<p><strong>Why Choose Me:</strong></p><p>${esc(desc.why)}</p><p><br></p>`
+        + `<p>${esc(desc.intro)}</p><p><br></p>`
+        + `<p><strong>I can develop:</strong></p><ul>${devHtml}</ul><p><br></p>`
+        + `<p><strong>Why choose me?</strong></p>${whyHtml}<p><br></p>`
+        + `<p>${esc(desc.closing)}</p><p><br></p>`
         + `<p>${esc(desc.cta)}</p>`;
 
       document.execCommand('insertHTML', false, html);
