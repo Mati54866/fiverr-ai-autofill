@@ -407,16 +407,19 @@ function injectPage3() {
       const data = await ask(`Keywords: ${kw}`,
         `Write a Fiverr gig description for: ${kw}. Return ONLY valid JSON with these exact keys:
 {
-  "hook": "Opening paragraph: 2-3 sentences on value and outcome. ~180 chars.",
-  "bullets": ["deliverable 1", "deliverable 2", "deliverable 3", "deliverable 4", "deliverable 5", "deliverable 6"],
-  "why": "Why choose me paragraph: 2-3 sentences on experience, quality, speed, support. ~180 chars.",
-  "cta": "Single call-to-action sentence. ~70 chars."
+  "hook": "...",
+  "bullets": ["...", "...", "...", "...", "...", "..."],
+  "why": "...",
+  "cta": "..."
 }
 Rules:
-- Each bullet is a SHORT specific deliverable (no emoji, 8-12 words max)
+- hook: 3 full sentences about the value and outcome of this gig. 280-320 chars.
+- bullets: exactly 6 items. Each is a specific deliverable, 8-12 words, no emoji.
+- why: 3 full sentences about experience, turnaround, quality, and support. 280-320 chars.
+- cta: one direct call-to-action sentence urging the buyer to hire. 70-90 chars.
 - Weave keywords naturally: ${kw}
-- Total hook+bullets+why+cta must be ~900 characters including spaces
-- Output JSON only — no extra text, no char counts, no explanations`
+- Total combined length must be 900-1000 characters. Write FULL sentences — no fragments.
+- Output JSON only, no markdown, no char counts.`
       );
 
       let desc;
@@ -457,16 +460,15 @@ Rules:
       newLine();
 
       // Bullet list via toolbar click
-      qlBullet()?.click(); await sleep(100);
+      qlBullet()?.click(); await sleep(200);
       for (let bi = 0; bi < desc.bullets.length; bi++) {
         insert(desc.bullets[bi]);
         await sleep(rand(40, 70));
-        // Only add newline between items — not after the last one
-        if (bi < desc.bullets.length - 1) { newLine(); await sleep(rand(30, 60)); }
+        newLine(); await sleep(rand(30, 60));
       }
-      // Exit list: click bullet to toggle off (cursor is at end of last item, not on empty line)
+      // Cursor is now on a new empty list item — exit list from there
       qlBullet()?.click(); await sleep(80);
-      newLine(); newLine();
+      newLine();
 
       // "Why Choose Me:" — bold via toolbar click
       qlBold()?.click(); await sleep(60);
