@@ -413,12 +413,12 @@ function injectPage3() {
   "cta": "..."
 }
 Rules:
-- hook: EXACTLY 3 sentences, 250-300 chars. Talk about value, outcome, and what makes this gig stand out.
-- bullets: exactly 6 items. Each bullet is 8-12 words describing a specific deliverable or service included.
-- why: EXACTLY 3 sentences, 250-300 chars. Cover your experience level, turnaround speed, quality standards, and after-delivery support.
-- cta: one imperative sentence urging the buyer to hire you, 70-90 chars.
+- hook: 4 full sentences, 350-420 chars. Cover what the gig delivers, the value to the buyer, your expertise, and what sets you apart.
+- bullets: exactly 6 items. Each is 10-14 words describing a specific deliverable or service. No duplicates.
+- why: 4 full sentences, 350-420 chars. Cover your experience, turnaround speed, quality standards, revision policy, and post-delivery support.
+- cta: one direct sentence urging the buyer to order, 70-90 chars.
 - Weave keywords naturally: ${kw}
-- CRITICAL: hook alone must be 250+ chars. why alone must be 250+ chars. Do NOT write short sentences.
+- CRITICAL: hook must be 350+ chars. why must be 350+ chars. Total must exceed 1100 chars. Write LONG, detailed sentences.
 - Output JSON only, no markdown, no char counts.`
       );
 
@@ -436,38 +436,24 @@ Rules:
       editor.focus();
       await sleep(rand(200, 350));
 
-      // Move cursor to end of editor (re-call before each insert to survive Quill re-renders)
-      const refocus = () => {
-        editor.focus();
-        const sel = window.getSelection();
-        const r = document.createRange();
-        r.selectNodeContents(editor);
-        r.collapse(false);
-        try { sel.removeAllRanges(); sel.addRange(r); } catch(e) {}
-      };
-      const ins  = (text) => { refocus(); document.execCommand('insertText', false, text); };
-      const nl   = async () => { refocus(); document.execCommand('insertParagraph', false, null); await sleep(120); };
-      const bold = () => document.querySelector('.ql-bold')?.click();
-
       // Clear editor
-      refocus();
       document.execCommand('selectAll', false, null);
       await sleep(60);
       document.execCommand('delete', false, null);
       await sleep(150);
+      editor.focus();
+      await sleep(80);
 
-      ins(desc.hook); await nl(); await nl();
+      // Build and insert full HTML in one shot — avoids Quill re-render cursor loss
+      const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const bHtml = desc.bullets.map(b => `<li>${esc(b)}</li>`).join('');
+      const html = `<p>${esc(desc.hook)}</p><p><br></p>`
+        + `<p><strong>What You Get:</strong></p><ul>${bHtml}</ul><p><br></p>`
+        + `<p><strong>Why Choose Me:</strong></p><p>${esc(desc.why)}</p><p><br></p>`
+        + `<p>${esc(desc.cta)}</p>`;
 
-      bold(); await sleep(60); ins('What You Get:'); bold(); await sleep(60);
-      await nl();
-      for (const b of desc.bullets) { ins('• ' + b); await nl(); }
-      await nl();
-
-      bold(); await sleep(60); ins('Why Choose Me:'); bold(); await sleep(60);
-      await nl();
-      ins(desc.why); await nl(); await nl();
-      ins(desc.cta);
-      await sleep(200);
+      document.execCommand('insertHTML', false, html);
+      await sleep(400);
 
       setMsg('Description filled!', 'success');
     });
