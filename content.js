@@ -336,7 +336,7 @@ function injectPage2() {
 }
 Rules:
 - Names: creative tier-appropriate names (NOT Basic/Standard/Premium). E.g. Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate. Each must be DIFFERENT.
-- Description: list the specific features/deliverables included in this tier. 75-90 characters. No "I will", no "I'll". Just features. Example (basic): "Popup UI, content script, manifest V3, and basic functionality with clean code." Example (premium): "Popup, background worker, content scripts, storage API, OAuth, and full documentation."
+- Description: use the format 'This [Name] package includes [what's in it].' — 75-90 characters. Example: 'This Starter package includes a logo design with 2 revisions and the source file.' Adapt to the gig niche and tier scope.
 - Prices: realistic for the gig type and tier (basic cheapest, premium highest).
 - Escalate scope between tiers: basic = minimal, standard = full, premium = everything + extras.
 JSON only.`
