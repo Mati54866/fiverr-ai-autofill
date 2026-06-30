@@ -471,14 +471,14 @@ Rules:
     const btn = makeBtn('◆ Generate FAQs', async (kw) => {
       setMsg('Generating FAQs…', 'info');
       const raw = await ask(`Keywords: ${kw}`,
-        `Write exactly 5 UNIQUE FAQs for a Fiverr gig about: ${kw}
-Questions and answers must be SPECIFIC to this gig type — not generic.
-Cover these 5 topics in order:
-1. Delivery time — how long does the work take? Be specific (e.g. "3-5 business days depending on complexity").
-2. Revisions — how many revisions are included and what counts as a revision?
-3. Requirements — what information or assets do you need from the buyer to start?
-4. Output/deliverables — exactly what files, formats, or results will the buyer receive?
-5. Experience — what is your background or expertise relevant to this gig?
+        `Write exactly 5 FAQs a real buyer would ask about a Fiverr gig for: ${kw}
+Think like a buyer with a specific concern — not a generic template writer.
+Cover these 5 real buyer concerns:
+1. How long will my project take? (give a concrete timeline with a reason)
+2. What if I need changes after delivery? (specific revision policy)
+3. What do you need from me to get started? (exact requirements)
+4. What exactly will I receive? (files, formats, source code, documentation etc.)
+5. Have you done this before? (specific past experience, tools used, numbers if possible)
 Return ONLY valid JSON array:
 [
   { "question": "...", "answer": "..." },
@@ -487,11 +487,11 @@ Return ONLY valid JSON array:
   { "question": "...", "answer": "..." },
   { "question": "...", "answer": "..." }
 ]
-STRICT RULES:
-- NEVER mention email, phone, WhatsApp, Telegram, Skype or any outside contact — Fiverr TOS violation.
-- Questions: natural, conversational, phrased as buyer asking seller.
-- Answers: 2-3 sentences, SPECIFIC to ${kw}, use 220-260 characters. Include real details — tools, timelines, formats, numbers. No vague filler like "it depends" or "great results".
-- Weave keywords from (${kw}) naturally into 2-3 answers.
+RULES:
+- NEVER mention email, phone, WhatsApp, Telegram, Skype — Fiverr TOS violation.
+- Questions: written as the buyer asking, casual and direct (e.g. "How long does it take?", "What do I get?").
+- Answers: confident, personal, first-person. 2 sentences max. 180-240 chars. Use real specifics — tool names, day counts, file types, numbers. Sound like a real seller, not a template.
+- BAD answer: "I will deliver high-quality results in a timely manner." GOOD answer: "Most projects take 3-5 days. I'll send you the full source code, manifest, and a setup guide."
 JSON only, no markdown.`
       );
       let faqs;
