@@ -984,7 +984,7 @@ Return ONLY valid JSON:
   "title": "Job title relevant to the niche",
   "company": "Pick ONE company from this list that fits best as the platform or employer — do NOT default to the first item, pick whichever suits the niche: ${companyStr}",
   "currentlyWorking": true,
-  "description": "Specific achievements, tools used, results. Max 600 chars. No markdown."
+  "description": "What you built and what tools you used. Max 600 chars. No markdown. Do NOT mention ratings, star ratings, prices, earnings, client counts, percentages, or Fiverr-specific metrics."
 }
 JSON only.`
     );
@@ -1144,9 +1144,20 @@ JSON only.`
     }
 
     // "I currently work here" checkbox
-    if (exp.currentlyWorking) {
-      const cb = [...document.querySelectorAll('input[type="checkbox"]')].find(c => isVisible(c));
-      if (cb && !cb.checked) { cb.click(); await sleep(rand(150, 280)); }
+    setStatus('⟳ Checking currently work here…');
+    const cb = [...document.querySelectorAll('input[type="checkbox"]')].find(c => isVisible(c));
+    if (cb && !cb.checked) {
+      const cbLabel = (cb.id && document.querySelector(`label[for="${cb.id}"]`))
+        || cb.closest('label') || cb.parentElement;
+      (cbLabel || cb).click();
+      await sleep(rand(300, 500));
+      // Force React state update if click didn't register
+      if (!cb.checked) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'checked')?.set;
+        nativeSetter?.call(cb, true);
+        cb.dispatchEvent(new Event('change', { bubbles: true }));
+        await sleep(rand(200, 300));
+      }
     }
 
     // Start date → click field, navigate calendar back 12 months, pick day 1
