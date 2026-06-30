@@ -984,7 +984,7 @@ Return ONLY valid JSON:
   "title": "Job title relevant to the niche",
   "company": "Pick ONE company from this list that fits best as the platform or employer — do NOT default to the first item, pick whichever suits the niche: ${companyStr}",
   "currentlyWorking": true,
-  "description": "What you built and what tools you used. Max 600 chars. No markdown. Do NOT mention ratings, star ratings, prices, earnings, client counts, percentages, or Fiverr-specific metrics."
+  "description": "3-4 sentences describing what you built, the technologies/tools used, the problems solved, and the outcomes. 400-550 chars. No markdown. Do NOT mention ratings, star ratings, prices, earnings, client counts, percentages, or platform metrics."
 }
 JSON only.`
     );
@@ -1167,8 +1167,9 @@ JSON only.`
     if (startDateField) {
       startDateField.click();
       await sleep(rand(500, 700));
-      // Navigate back ~12 months using the prev-month arrow
-      for (let m = 0; m < 12; m++) {
+      // Navigate back 3-5 years (36-60 months) randomly
+      const monthsBack = rand(36, 60);
+      for (let m = 0; m < monthsBack; m++) {
         const prevArrow = [...document.querySelectorAll('button, div, span')]
           .find(el => isVisible(el) && (/^[<‹←]$/.test(el.textContent.trim()) || /prev|back|before/i.test(el.getAttribute('aria-label') || '')));
         if (!prevArrow) break;
