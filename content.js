@@ -436,49 +436,21 @@ Rules:
       editor.focus();
       await sleep(rand(200, 350));
 
-      // Helpers that use Quill toolbar buttons (more reliable than execCommand)
-      const qlBold   = () => document.querySelector('.ql-bold');
-      const qlBullet = () => document.querySelector('.ql-list[value="bullet"]');
-      const insert   = (text) => { editor.focus(); document.execCommand('insertText', false, text); };
-      const newLine  = () => document.execCommand('insertParagraph', false, null);
-
       // Clear editor
       document.execCommand('selectAll', false, null);
       await sleep(60);
       document.execCommand('delete', false, null);
-      await sleep(100);
+      await sleep(150);
 
-      // Hook paragraph
-      insert(desc.hook);
-      newLine(); newLine();
-      await sleep(rand(80, 130));
+      // Build HTML and paste in one shot — avoids execCommand cursor-loss crashes
+      const esc = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const bulletHtml = desc.bullets.map(b => `<li>${esc(b)}</li>`).join('');
+      const html = `<p>${esc(desc.hook)}</p><p><br></p><p><strong>What You Get:</strong></p><ul>${bulletHtml}</ul><p><br></p><p><strong>Why Choose Me:</strong></p><p>${esc(desc.why)}</p><p><br></p><p>${esc(desc.cta)}</p>`;
 
-      // "What You Get:" — bold via toolbar click
-      qlBold()?.click(); await sleep(60);
-      insert('What You Get:');
-      qlBold()?.click(); await sleep(60);
-      newLine();
-
-      // Bullets as plain text with • prefix — avoids Quill list cursor issues
-      for (let bi = 0; bi < desc.bullets.length; bi++) {
-        insert('• ' + desc.bullets[bi]);
-        await sleep(rand(40, 70));
-        newLine(); await sleep(rand(30, 60));
-      }
-      newLine();
-
-      // "Why Choose Me:" — bold via toolbar click
-      qlBold()?.click(); await sleep(60);
-      insert('Why Choose Me:');
-      qlBold()?.click(); await sleep(60);
-      newLine();
-      insert(desc.why);
-      newLine(); newLine();
-      await sleep(rand(60, 100));
-
-      // CTA
-      insert(desc.cta);
-      await sleep(rand(80, 140));
+      const dt = new DataTransfer();
+      dt.setData('text/html', html);
+      editor.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt }));
+      await sleep(500);
 
       setMsg('Description filled!', 'success');
     });
