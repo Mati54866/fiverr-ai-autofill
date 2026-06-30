@@ -436,21 +436,38 @@ Rules:
       editor.focus();
       await sleep(rand(200, 350));
 
+      // Move cursor to end of editor (re-call before each insert to survive Quill re-renders)
+      const refocus = () => {
+        editor.focus();
+        const sel = window.getSelection();
+        const r = document.createRange();
+        r.selectNodeContents(editor);
+        r.collapse(false);
+        try { sel.removeAllRanges(); sel.addRange(r); } catch(e) {}
+      };
+      const ins  = (text) => { refocus(); document.execCommand('insertText', false, text); };
+      const nl   = async () => { refocus(); document.execCommand('insertParagraph', false, null); await sleep(120); };
+      const bold = () => document.querySelector('.ql-bold')?.click();
+
       // Clear editor
+      refocus();
       document.execCommand('selectAll', false, null);
       await sleep(60);
       document.execCommand('delete', false, null);
       await sleep(150);
 
-      // Build HTML and paste in one shot — avoids execCommand cursor-loss crashes
-      const esc = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const bulletHtml = desc.bullets.map(b => `<li>${esc(b)}</li>`).join('');
-      const html = `<p>${esc(desc.hook)}</p><p><br></p><p><strong>What You Get:</strong></p><ul>${bulletHtml}</ul><p><br></p><p><strong>Why Choose Me:</strong></p><p>${esc(desc.why)}</p><p><br></p><p>${esc(desc.cta)}</p>`;
+      ins(desc.hook); await nl(); await nl();
 
-      const dt = new DataTransfer();
-      dt.setData('text/html', html);
-      editor.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: dt }));
-      await sleep(500);
+      bold(); await sleep(60); ins('What You Get:'); bold(); await sleep(60);
+      await nl();
+      for (const b of desc.bullets) { ins('• ' + b); await nl(); }
+      await nl();
+
+      bold(); await sleep(60); ins('Why Choose Me:'); bold(); await sleep(60);
+      await nl();
+      ins(desc.why); await nl(); await nl();
+      ins(desc.cta);
+      await sleep(200);
 
       setMsg('Description filled!', 'success');
     });
