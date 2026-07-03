@@ -14,15 +14,15 @@ A Chrome extension that uses **Groq AI** to generate and autofill your entire Fi
 ### Gig Editor
 - **AI Title** — Compelling "I will..." titles under 80 characters
 - **Auto Tags** — 5 relevant gig search tags
-- **3-Tier Packages** — Basic / Standard / Premium with names, descriptions, prices
-- **Formatted Description** — Hook + bullets + CTA, 1000–1200 chars, injected into Fiverr's editor
-- **5 FAQs** — Buyer-focused Q&A pairs, auto-added one by one
+- **3-Tier Packages** — Basic / Standard / Premium with unique names, Fiverr-style descriptions ("This [Name] package includes...", 75–90 chars), and realistic prices
+- **Formatted Description** — Question hook, intro, "I can develop" bullets, "Why choose me?" bullets, closing, and CTA — matches Fiverr's own recommended structure
+- **5 FAQs** — Buyer-voiced questions with personal, specific, first-person answers (delivery, revisions, requirements, deliverables, experience)
 - **Buyer Requirements** — Auto-fills and marks required
 - **Per-Gig Niche Input** — A niche bar is injected directly on each gig page; type a different niche per gig without touching the popup
 
 ### Seller Profile
 - **Bio / About** — Professional seller bio personalized with your name, years of experience, and country
-- **Work Experience** — Full entry (title, company, employment type, date, description) auto-filled and submitted
+- **Work Experience** — Full entry (title, company, employment type, date, description) auto-filled and submitted. Company is picked from your list without bias, start date is randomized 3–5 years back, and descriptions never mention ratings, prices, or platform metrics
 - **Skills** — Picks 6 relevant skills from Fiverr's actual skill database, auto-selects each with experience level
 
 ### General
@@ -123,7 +123,8 @@ content.js builds prompt with niche + profile info (name, years, country)
 background.js calls Groq API (llama-3.3-70b-versatile)
         ↓
 Response is typed character-by-character into Fiverr's fields
-using React-compatible events (nativeInputValueSetter + InputEvent)
+using React-compatible events (nativeInputValueSetter + InputEvent),
+or inserted as formatted HTML into Fiverr's Quill editor via execCommand,
 so Fiverr registers it as real user input
 ```
 
@@ -146,6 +147,7 @@ so Fiverr registers it as real user input
 - Groq's free tier handles hundreds of requests per day at no cost
 - The niche bar on gig pages is per-session — it doesn't persist between page loads (intentional, since each gig is different)
 - Skills and companies are bundled with the extension — no internet fetch needed on first run
+- Only requests the `storage` permission — no `activeTab` or broad host access beyond `fiverr.com` and the Groq API
 
 ---
 
