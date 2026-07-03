@@ -1,11 +1,11 @@
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = 'llama-3.3-70b-versatile';
+const DEFAULT_MODEL = 'llama-3.3-70b-versatile';
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GROQ_REQUEST') {
-    chrome.storage.sync.get(['groqKeys', 'groqApiKey'], (stored) => {
+    chrome.storage.sync.get(['groqKeys', 'groqApiKey', 'model', 'temperature'], (stored) => {
       const storedKeys = stored.groqKeys || (stored.groqApiKey ? [stored.groqApiKey] : []);
-      handleGroqRequest(msg.payload, storedKeys)
+      handleGroqRequest(msg.payload, storedKeys, stored.model, stored.temperature)
         .then(sendResponse)
         .catch(err => sendResponse({ error: err.message }));
     });
@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
-async function callWithKey(apiKey, prompt, systemPrompt) {
+async function callWithKey(apiKey, prompt, systemPrompt, model, temperature) {
   const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
@@ -21,8 +21,8 @@ async function callWithKey(apiKey, prompt, systemPrompt) {
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: MODEL,
-      temperature: 0.7,
+      model: model || DEFAULT_MODEL,
+      temperature: temperature ?? 0.7,
       max_tokens: 8000,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -41,7 +41,7 @@ async function callWithKey(apiKey, prompt, systemPrompt) {
   return data.choices[0].message.content.trim();
 }
 
-async function handleGroqRequest({ apiKey, prompt, systemPrompt }, storedKeys = []) {
+async function handleGroqRequest({ apiKey, prompt, systemPrompt }, storedKeys = [], model, temperature) {
   const keys = [...storedKeys];
   if (apiKey && !keys.includes(apiKey)) keys.push(apiKey);
 
@@ -50,7 +50,7 @@ async function handleGroqRequest({ apiKey, prompt, systemPrompt }, storedKeys = 
   }
 
   for (const key of keys) {
-    const result = await callWithKey(key, prompt, systemPrompt);
+    const result = await callWithKey(key, prompt, systemPrompt, model, temperature);
     if (result !== null) return { result };
   }
 
