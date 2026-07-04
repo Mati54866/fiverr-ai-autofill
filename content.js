@@ -327,25 +327,45 @@ function injectPage2() {
     anchor.dataset.faiDone = '1';
     const btn = makeBtn('◆ Generate Packages', async (kw) => {
       setMsg('Generating packages…', 'info');
-      const raw = await ask(`Keywords: ${kw}`,
-        `Create 3 Fiverr packages for a gig about: ${kw}. Return ONLY valid JSON:
+      const packagesPrompt = `Create 3 Fiverr packages for a gig about: ${kw}. Return ONLY valid JSON, no markdown code fences, no extra text:
 {
   "basic":    { "name": "UNIQUE_NAME_1", "description": "...", "price": 30  },
   "standard": { "name": "UNIQUE_NAME_2", "description": "...", "price": 75  },
   "premium":  { "name": "UNIQUE_NAME_3", "description": "...", "price": 150 }
 }
 Rules:
+- Top-level keys must be exactly "basic", "standard", "premium" (lowercase) — nothing else.
 - Names: creative tier-appropriate names (NOT Basic/Standard/Premium). E.g. Starter, Growth, Pro, Elite, Essential, Advanced, Ultimate. Each must be DIFFERENT.
 - Description: use the format 'This [Name] package includes [what's in it].' — 75-90 characters. Example: 'This Starter package includes a logo design with 2 revisions and the source file.' Adapt to the gig niche and tier scope.
 - Prices: realistic for the gig type and tier (basic cheapest, premium highest).
 - Escalate scope between tiers: basic = minimal, standard = full, premium = everything + extras.
-JSON only.`
-      );
+JSON only.`;
 
-      let pkgs;
-      try { pkgs = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); }
-      catch { throw new Error('Could not parse packages — try again'); }
-      if (!pkgs || !pkgs.basic) throw new Error('Invalid package data — try again');
+      // Normalise whatever shape the model returns into {basic, standard, premium}
+      function normalisePkgs(obj) {
+        if (!obj || typeof obj !== 'object') return null;
+        // Unwrap common wrapper keys
+        const inner = obj.packages || obj.data || obj.result || obj;
+        const lower = {};
+        for (const k of Object.keys(inner)) lower[k.toLowerCase().trim()] = inner[k];
+        if (lower.basic && lower.standard && lower.premium) return lower;
+        return null;
+      }
+
+      async function generatePkgs() {
+        const raw = await ask(`Keywords: ${kw}`, packagesPrompt);
+        let parsed;
+        try { parsed = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); }
+        catch { return null; }
+        return normalisePkgs(parsed);
+      }
+
+      let pkgs = await generatePkgs();
+      if (!pkgs) {
+        setMsg('Retrying package generation…', 'info');
+        pkgs = await generatePkgs();
+      }
+      if (!pkgs) throw new Error('Invalid package data — try again');
 
       // Re-query at click time — Fiverr React may have re-rendered since inject
       const freshNames  = [...document.querySelectorAll('textarea[placeholder*="Name your package"]')].filter(isVisible).slice(0, 3);
