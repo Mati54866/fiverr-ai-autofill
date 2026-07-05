@@ -662,15 +662,99 @@ function injectPage5() {
 
   const btn = makeBtn('◆ Generate Image Prompt', async (kw, setStatus) => {
     setStatus('⟳ Writing image prompt…');
-    const scene = await ask(`Keywords: ${kw}`,
-      `Write ONE vivid visual scene description (2-3 sentences, no more) for a Fiverr gig cover image thumbnail about: ${kw}.
-This must look like a professional service-marketplace listing image, not a random photo — the kind of image that makes a buyer stop scrolling and click. Include a clear focal subject that signals the exact service being sold, composed so it still reads clearly at small thumbnail size (centered subject, uncluttered background, strong contrast).
-Describe concrete visual elements — objects, layout, color palette, mood, style (flat design / 3D render / photorealistic, pick whichever fits the niche best).
-Do NOT mention image size, resolution, or technical specs — only the visual content.
-No markdown, no quotes, plain text only.`
+    const raw = await ask(`Keywords: ${kw}`,
+      `Design the text and icon content for a premium Fiverr gig thumbnail poster about: ${kw}.
+Return ONLY valid JSON:
+{
+  "line1": "FIRST BOLD WORD (1-2 words, ALL CAPS, the general category — e.g. PYTHON, WEB DESIGN, VIDEO EDITING)",
+  "line2": "SECOND BOLD WORD (1 word, ALL CAPS, the standout highlight — e.g. PRO, EXPERT, BOT, SERVICES — bigger than line1)",
+  "subtitle": "3-5 short related keywords separated by a bullet, relevant to this exact gig",
+  "logos": ["Name1", "Name2", "Name3", "Name4", "Name5", "Name6"]
+}
+Rules:
+- line1 and line2 together form the poster's main title — short, punchy, together read like a service name.
+- logos: real, well-known software/tool/platform names strongly associated with this niche (e.g. for a Python gig: Python, Django, Flask, PostgreSQL, Docker, AWS). If the niche has no well-known brand tools, return short generic icon descriptions instead (e.g. "gear icon", "paintbrush icon", "camera icon"). Provide up to 6.
+JSON only, no markdown.`
     );
 
-    const prompt = `Create a Fiverr gig cover image (marketplace listing thumbnail) for a gig about: ${kw}.\n\n${scene.trim()}\n\nStyle: clean, professional, modern Fiverr gig thumbnail — the kind of image used to sell a freelance service on a marketplace. Clear focal subject, uncluttered composition that still reads well at small thumbnail size. High quality, high resolution, no text or watermark anywhere in the image. Generate at 1536x1024 pixels (landscape).`;
+    let d;
+    try { d = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); } catch { d = null; }
+    if (!d || !d.line1 || !d.line2) throw new Error('Could not build image prompt — try again');
+
+    const positions = ['Top-left area', 'Top-right area', 'Bottom-left area', 'Bottom-right area', 'Far left middle', 'Far right middle'];
+    const logoLines = (d.logos || []).slice(0, 6)
+      .map((l, i) => `${positions[i] || 'Scattered'}: ${l} logo/icon`)
+      .join('\n');
+
+    const prompt = `Create a premium Fiverr gig thumbnail, 1536x1024 pixels.
+One unified full image. NO split panels. NO divider lines.
+NO vertical separator lines. NO cards. NO feature lists.
+Bold typography center. Relevant tool/platform icons surrounding it.
+
+BACKGROUND: Pure deep black (#05080F) across entire image.
+Completely clean and unified. No patterns, no grid,
+no textures, no columns, nothing in background.
+
+CENTER OF IMAGE (main focal point):
+Massive ultra-bold Anton or Montserrat Black font,
+2 lines, perfectly centered on entire image:
+
+Line 1: "${d.line1.toUpperCase()}" — pure white, absolutely enormous
+Line 2: "${d.line2.toUpperCase()}" — gold (#FFB800), even bigger than line 1,
+dominates the image completely.
+
+Below title, one thin horizontal gold (#FFB800) line.
+
+Below that line, one single clean light gray text line:
+"${d.subtitle}"
+
+That is all the text on the entire image. Nothing else.
+
+ICONS/LOGOS (arranged organically around the title,
+not in a row, scattered with breathing room, like planets
+around a center, each large and clearly visible):
+
+${logoLines}
+
+Each icon should be large enough to be instantly
+recognizable at thumbnail size. Not tiny badges.
+Not a bottom row. Spread across the full image
+surrounding the center text organically.
+
+All icons on the pure black background with generous
+breathing room between them and the center text.
+
+COLOR PALETTE:
+- Background: #05080F pure black unified
+- Title line 1: pure white
+- Title line 2: gold #FFB800
+- Subtitle: light gray
+- Gold separator: #FFB800
+- Logos: official brand colors exactly (or clean single-color icon style if generic)
+
+TYPOGRAPHY: Anton or Montserrat Black for title only.
+Clean minimal sans-serif for subtitle only.
+Zero other text anywhere on image.
+
+STYLE: Minimal dark tech poster. Bold center title.
+Recognizable icons spread around it.
+Extreme negative space between all elements.
+Every icon has room to breathe.
+Clean, premium, institutional.
+
+CRITICAL RULES:
+- ONE unified background, no panels, no splits
+- Maximum 3 text elements total
+- Icons spread organically not in a straight row
+- No badges, no cards, no stat lines
+- No decorative elements of any kind
+- No human figures, no charts, no screenshots
+
+DO NOT include: split lines, divider panels, feature
+cards, stat badges, bottom logo rows, code textures,
+particle effects, lightning bolts, human figures,
+charts, money imagery, glow effects, website URL,
+hexagon badges, clutter of any kind.`;
 
     try {
       await navigator.clipboard.writeText(prompt);
