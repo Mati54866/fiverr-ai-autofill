@@ -648,6 +648,43 @@ JSON only.`
   else reqTextarea.closest('div')?.before(btn);
 }
 
+// ── Page 5: Gallery — AI image prompt generator ───────────────────────────────
+
+function injectPage5() {
+  injectNicheBar();
+
+  const heading = [...document.querySelectorAll('h1,h2,h3,h4')]
+    .find(el => /gallery|show off your (best )?work|images? (&|and) video/i.test(el.textContent.trim()));
+  const dropzone = document.querySelector('input[type="file"][accept*="image" i]');
+  const anchor = heading || dropzone?.closest('div');
+  if (!anchor || anchor.dataset.faiGalleryDone) return;
+  anchor.dataset.faiGalleryDone = '1';
+
+  const btn = makeBtn('◆ Generate Image Prompt', async (kw, setStatus) => {
+    setStatus('⟳ Writing image prompt…');
+    const scene = await ask(`Keywords: ${kw}`,
+      `Write ONE vivid visual scene description (2-3 sentences, no more) for a Fiverr gig cover image about: ${kw}.
+Describe concrete visual elements — objects, layout, color palette, mood, style (flat design / 3D render / photorealistic, pick whichever fits the niche best).
+Do NOT mention image size, resolution, or technical specs — only the visual content.
+No markdown, no quotes, plain text only.`
+    );
+
+    const prompt = `${scene.trim()}\n\nStyle: clean, professional, modern marketplace cover image. High quality, high resolution, no text or watermark anywhere in the image. Generate at 1536x1024 pixels (landscape).`;
+
+    try {
+      await navigator.clipboard.writeText(prompt);
+      setStatus('✓ Copied — paste into ChatGPT');
+    } catch (_) {
+      // Clipboard blocked — fall back to showing it in a prompt dialog for manual copy
+      window.prompt('Copy this prompt (Cmd/Ctrl+C):', prompt);
+    }
+    await sleep(1800);
+  });
+
+  if (heading) heading.after(btn);
+  else anchor.before(btn);
+}
+
 // Traverse up from el to find a visible button matching pattern (up to maxLevels ancestors)
 function findNearbyBtn(el, pattern, maxLevels = 12) {
   let node = el;
@@ -1358,6 +1395,7 @@ function scanAndInject() {
     injectPage2();
     injectPage3();
     injectPage4();
+    injectPage5();
   }
   if (PROFILE_PATTERN.test(location.href)) {
     injectAbout();
