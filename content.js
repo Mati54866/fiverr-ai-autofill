@@ -660,6 +660,87 @@ function injectPage5() {
   if (!anchor || anchor.dataset.faiGalleryDone) return;
   anchor.dataset.faiGalleryDone = '1';
 
+  // Color palettes — [background hex, name, accent hex, accent name]
+  const PALETTES = [
+    ['#05080F', 'pure deep black', '#FFB800', 'gold'],
+    ['#0A0F1E', 'deep navy', '#00D9FF', 'electric cyan'],
+    ['#12080A', 'near-black charcoal red', '#FF3B30', 'crimson red'],
+    ['#0B0F0C', 'deep forest black', '#39FF88', 'neon green'],
+    ['#0D0A14', 'deep violet-black', '#C77DFF', 'vivid purple'],
+    ['#FFFFFF', 'pure white', '#0057FF', 'royal blue'],
+    ['#0F0B08', 'deep espresso black', '#FF8A00', 'burnt orange'],
+  ];
+
+  // Layout skeletons — each returns the full prompt given the content fields
+  const LAYOUTS = [
+    // A: stacked two-line massive title, centered, icons scattered corners/mid-sides
+    (d, bg, accent, logoLines) => `Create a premium Fiverr gig thumbnail, 1536x1024 pixels.
+One unified full image. NO split panels. NO divider lines. NO cards. NO feature lists.
+Bold typography center. Relevant tool/platform icons surrounding it.
+
+BACKGROUND: ${bg[1]} (${bg[0]}) across the entire image. Completely clean and unified — no patterns, no grid, no textures, no columns.
+
+CENTER OF IMAGE (main focal point): massive ultra-bold Anton or Montserrat Black font, 2 lines, perfectly centered:
+Line 1: "${d.line1}" — pure ${bg[0] === '#FFFFFF' ? 'black' : 'white'}, absolutely enormous
+Line 2: "${d.line2}" — ${accent[1]} (${accent[0]}), even bigger than line 1, dominates the image
+
+Below title, one thin horizontal ${accent[1]} line. Below that, one single clean light gray text line: "${d.subtitle}"
+That is all the text on the entire image.
+
+ICONS/LOGOS, arranged organically around the title like planets around a center, not in a row, each large and instantly recognizable:
+${logoLines}
+
+STYLE: minimal dark tech poster, extreme negative space, clean and premium.
+DO NOT include: split lines, divider panels, feature cards, stat badges, bottom logo rows, particle effects, human figures, charts, money imagery, website URL, hexagon badges, clutter of any kind.`,
+
+    // B: single dominant word large, second word smaller below it, icons in a loose bottom arc
+    (d, bg, accent, logoLines) => `Create a premium Fiverr gig thumbnail, 1536x1024 pixels. One unified image, no panels, no borders, no grid lines.
+
+BACKGROUND: solid ${bg[1]} (${bg[0]}), completely flat and clean.
+
+UPPER-CENTER TEXT: the single word "${d.line2}" in massive ultra-bold condensed sans-serif (Anton style), filling most of the horizontal width, color ${accent[1]} (${accent[0]}), with a soft ${accent[1]} glow behind it.
+Directly above it, smaller: "${d.line1}" in plain white, roughly a quarter the size of the word below.
+Beneath both, one small light gray line: "${d.subtitle}".
+
+LOWER HALF: the following icons arranged in a loose, uneven arc across the bottom third of the image, varying sizes, generous spacing, none overlapping the text:
+${logoLines}
+
+STYLE: bold poster energy, like a movie title card. Premium, confident, minimal.
+DO NOT include: borders, panels, grids, human figures, charts, money imagery, screenshots, watermarks, extra text beyond what is specified.`,
+
+    // C: title in a rounded badge/pill, slightly tilted, icons only in the four corners
+    (d, bg, accent, logoLines) => `Create a premium Fiverr gig thumbnail, 1536x1024 pixels. One unified image, no split panels, no dividers, no feature cards.
+
+BACKGROUND: ${bg[1]} (${bg[0]}) with an extremely subtle diagonal gradient toward a slightly darker shade of the same color — barely visible, still reads as a flat unified background.
+
+CENTER: a rounded rectangular badge/pill shape, tilted about 4 degrees for energy, outlined with a thin ${accent[1]} border, containing the two-line bold title stacked inside it:
+Line 1: "${d.line1}" in white
+Line 2: "${d.line2}" in ${accent[1]} (${accent[0]}), larger than line 1
+Directly beneath the badge, outside it: one small light gray line reading "${d.subtitle}".
+
+FOUR CORNERS ONLY: place one recognizable icon in each corner, large and clear, generous margin from the edges — do not fill the corners with more than one icon each:
+${logoLines}
+
+STYLE: confident, modern, slightly dynamic due to the tilt. Premium poster energy, extreme cleanliness elsewhere.
+DO NOT include: extra badges, stat lines, charts, human figures, money imagery, screenshots, clutter of any kind.`,
+
+    // D: left-aligned asymmetric title, icons in a vertical column on the right
+    (d, bg, accent, logoLines) => `Create a premium Fiverr gig thumbnail, 1536x1024 pixels. One unified image, editorial poster layout, asymmetric composition — NOT centered.
+
+BACKGROUND: flat ${bg[1]} (${bg[0]}), completely clean, no textures or gradients.
+
+LEFT TWO-THIRDS OF IMAGE: massive bold stacked title, left-aligned, starting near the left edge:
+Line 1: "${d.line1}" in white, large
+Line 2: "${d.line2}" in ${accent[1]} (${accent[0]}), even larger, bold enough to dominate the left side
+Beneath the title, left-aligned, one small light gray line: "${d.subtitle}".
+
+RIGHT ONE-THIRD OF IMAGE: the following icons stacked vertically down the right edge, evenly spaced with generous gaps, each clearly visible and not touching the title text:
+${logoLines}
+
+STYLE: modern editorial tech poster, strong asymmetry, lots of negative space around the icon column.
+DO NOT include: dividing lines between the two sections, borders, panels, human figures, charts, money imagery, clutter of any kind.`,
+  ];
+
   const btn = makeBtn('◆ Generate Image Prompt', async (kw, setStatus) => {
     setStatus('⟳ Writing image prompt…');
     const raw = await ask(`Keywords: ${kw}`,
@@ -673,6 +754,7 @@ Return ONLY valid JSON:
 }
 Rules:
 - line1 and line2 together form the poster's main title — short, punchy, together read like a service name.
+- line2 must be a high-impact power word that maximizes click-through when a buyer scans small search thumbnails — e.g. PRO, EXPERT, MASTER, NINJA, WIZARD, GURU, DONE-FOR-YOU, ON-DEMAND. Pick whichever fits the niche's tone best (playful niches can use NINJA/WIZARD, technical/corporate niches should use PRO/EXPERT/MASTER).
 - logos: real, well-known software/tool/platform names strongly associated with this niche (e.g. for a Python gig: Python, Django, Flask, PostgreSQL, Docker, AWS). If the niche has no well-known brand tools, return short generic icon descriptions instead (e.g. "gear icon", "paintbrush icon", "camera icon"). Provide up to 6.
 JSON only, no markdown.`
     );
@@ -680,81 +762,19 @@ JSON only, no markdown.`
     let d;
     try { d = JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]); } catch { d = null; }
     if (!d || !d.line1 || !d.line2) throw new Error('Could not build image prompt — try again');
+    d.line1 = d.line1.toUpperCase();
+    d.line2 = d.line2.toUpperCase();
 
-    const positions = ['Top-left area', 'Top-right area', 'Bottom-left area', 'Bottom-right area', 'Far left middle', 'Far right middle'];
+    const positions = ['top-left area', 'top-right area', 'bottom-left area', 'bottom-right area', 'far left middle', 'far right middle'];
     const logoLines = (d.logos || []).slice(0, 6)
-      .map((l, i) => `${positions[i] || 'Scattered'}: ${l} logo/icon`)
+      .map((l, i) => `${positions[i] || 'scattered'}: ${l} logo/icon`)
       .join('\n');
 
-    const prompt = `Create a premium Fiverr gig thumbnail, 1536x1024 pixels.
-One unified full image. NO split panels. NO divider lines.
-NO vertical separator lines. NO cards. NO feature lists.
-Bold typography center. Relevant tool/platform icons surrounding it.
-
-BACKGROUND: Pure deep black (#05080F) across entire image.
-Completely clean and unified. No patterns, no grid,
-no textures, no columns, nothing in background.
-
-CENTER OF IMAGE (main focal point):
-Massive ultra-bold Anton or Montserrat Black font,
-2 lines, perfectly centered on entire image:
-
-Line 1: "${d.line1.toUpperCase()}" — pure white, absolutely enormous
-Line 2: "${d.line2.toUpperCase()}" — gold (#FFB800), even bigger than line 1,
-dominates the image completely.
-
-Below title, one thin horizontal gold (#FFB800) line.
-
-Below that line, one single clean light gray text line:
-"${d.subtitle}"
-
-That is all the text on the entire image. Nothing else.
-
-ICONS/LOGOS (arranged organically around the title,
-not in a row, scattered with breathing room, like planets
-around a center, each large and clearly visible):
-
-${logoLines}
-
-Each icon should be large enough to be instantly
-recognizable at thumbnail size. Not tiny badges.
-Not a bottom row. Spread across the full image
-surrounding the center text organically.
-
-All icons on the pure black background with generous
-breathing room between them and the center text.
-
-COLOR PALETTE:
-- Background: #05080F pure black unified
-- Title line 1: pure white
-- Title line 2: gold #FFB800
-- Subtitle: light gray
-- Gold separator: #FFB800
-- Logos: official brand colors exactly (or clean single-color icon style if generic)
-
-TYPOGRAPHY: Anton or Montserrat Black for title only.
-Clean minimal sans-serif for subtitle only.
-Zero other text anywhere on image.
-
-STYLE: Minimal dark tech poster. Bold center title.
-Recognizable icons spread around it.
-Extreme negative space between all elements.
-Every icon has room to breathe.
-Clean, premium, institutional.
-
-CRITICAL RULES:
-- ONE unified background, no panels, no splits
-- Maximum 3 text elements total
-- Icons spread organically not in a straight row
-- No badges, no cards, no stat lines
-- No decorative elements of any kind
-- No human figures, no charts, no screenshots
-
-DO NOT include: split lines, divider panels, feature
-cards, stat badges, bottom logo rows, code textures,
-particle effects, lightning bolts, human figures,
-charts, money imagery, glow effects, website URL,
-hexagon badges, clutter of any kind.`;
+    const bg = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+    const accent = [bg[2], bg[3]];
+    const buildPrompt = LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+    const ctrNote = `\n\nOPTIMIZE FOR CLICK-THROUGH: this image will appear tiny in Fiverr search results, competing against dozens of other thumbnails. Maximum contrast between text and background so the title is instantly legible even at thumbnail size. Bold, confident, scroll-stopping — not subtle or muted.`;
+    const prompt = buildPrompt(d, bg, accent, logoLines) + ctrNote;
 
     try {
       await navigator.clipboard.writeText(prompt);
