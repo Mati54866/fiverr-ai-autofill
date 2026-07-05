@@ -663,13 +663,14 @@ function injectPage5() {
   const btn = makeBtn('◆ Generate Image Prompt', async (kw, setStatus) => {
     setStatus('⟳ Writing image prompt…');
     const scene = await ask(`Keywords: ${kw}`,
-      `Write ONE vivid visual scene description (2-3 sentences, no more) for a Fiverr gig cover image about: ${kw}.
+      `Write ONE vivid visual scene description (2-3 sentences, no more) for a Fiverr gig cover image thumbnail about: ${kw}.
+This must look like a professional service-marketplace listing image, not a random photo — the kind of image that makes a buyer stop scrolling and click. Include a clear focal subject that signals the exact service being sold, composed so it still reads clearly at small thumbnail size (centered subject, uncluttered background, strong contrast).
 Describe concrete visual elements — objects, layout, color palette, mood, style (flat design / 3D render / photorealistic, pick whichever fits the niche best).
 Do NOT mention image size, resolution, or technical specs — only the visual content.
 No markdown, no quotes, plain text only.`
     );
 
-    const prompt = `${scene.trim()}\n\nStyle: clean, professional, modern marketplace cover image. High quality, high resolution, no text or watermark anywhere in the image. Generate at 1536x1024 pixels (landscape).`;
+    const prompt = `Create a Fiverr gig cover image (marketplace listing thumbnail) for a gig about: ${kw}.\n\n${scene.trim()}\n\nStyle: clean, professional, modern Fiverr gig thumbnail — the kind of image used to sell a freelance service on a marketplace. Clear focal subject, uncluttered composition that still reads well at small thumbnail size. High quality, high resolution, no text or watermark anywhere in the image. Generate at 1536x1024 pixels (landscape).`;
 
     try {
       await navigator.clipboard.writeText(prompt);
