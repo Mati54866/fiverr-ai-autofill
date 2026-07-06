@@ -9,6 +9,22 @@ A Chrome extension that uses **Groq AI** to generate and autofill your entire Fi
 
 ---
 
+## 📋 Table of Contents
+
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Setup](#setup)
+4. [How to Use](#how-to-use)
+5. [Pages Supported](#pages-supported)
+6. [Project Structure](#project-structure)
+7. [How It Works](#how-it-works)
+8. [Tech Stack](#tech-stack)
+9. [Notes](#notes)
+10. [Credits](#credits)
+11. [License](#license)
+
+---
+
 ## ✨ Features
 
 ### Gig Editor
@@ -37,3 +53,15 @@ A Chrome extension that uses **Groq AI** to generate and autofill your entire Fi
 1. Clone this repository
    ```bash
    git clone https://github.com/Mati54866/fiverr-ai-autofill.git
+
+## ⚙️ Setup
+
+1. Click the extension icon → **API Keys** tab
+2. Paste your Groq API key (free at [console.groq.com](https://console.groq.com))
+3. Click **◆ Save Keys**
+4. Go to **Keywords** tab → fill in your profile info:
+   - Your name
+   - Years of experience
+   - Your country
+   - Profile niche
+5. Click **◆ Save Profile**
