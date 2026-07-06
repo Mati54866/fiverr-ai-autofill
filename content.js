@@ -134,14 +134,17 @@ function isVisible(el) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
 
-async function ask(prompt, system) {
+async function ask(prompt, system, temperature) {
   const res = await chrome.runtime.sendMessage({
     type: 'GROQ_REQUEST',
-    payload: { apiKey, prompt, systemPrompt: system }
+    payload: { apiKey, prompt, systemPrompt: system, temperature }
   });
   if (res.error) throw new Error(res.error);
   return res.result;
 }
+
+// Pick a random item so repeated generations for the same keyword take a different creative angle
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function findByNearbyText(selector, pattern, maxDepth = 6) {
   const all = [...document.querySelectorAll('h3,h4,h5,p,label,div,span')];
@@ -279,12 +282,21 @@ function injectPage1() {
     titleEl.dataset.faiDone = '1';
     const btn = makeBtn('◆ Generate Title', async (kw) => {
       setMsg('Generating title…', 'info');
+      const angle = pick([
+        'Start with a strong action verb (build, develop, automate, create, design) followed by the tool/platform, then the outcome.',
+        'Lead with the specific tool or platform name first, then say what you do with it.',
+        'Lead with the outcome/result the buyer gets, then mention how you deliver it.',
+        'Start with a strong verb, but pick a less obvious one than build/develop/create — e.g. engineer, architect, launch, deploy, optimize.',
+        'Frame it around solving a specific buyer problem, then name the tool used to solve it.',
+      ]);
       const text = await ask(`Keywords: ${kw}`,
         `Write a short, SEO-optimized Fiverr gig title. The field already shows "I will" — write ONLY what comes after "I will". Do NOT include "I will".
 Max 60 chars. Naturally include 1-2 of these keywords: ${kw}.
-Start with a strong verb (build, develop, automate, design, create).
+${angle}
 Be specific and punchy: service + tool/platform + outcome. No filler words.
-Reply with ONLY the text, no quotes.`
+Avoid defaulting to the most generic, expected phrasing — this must read differently from a typical templated gig title.
+Reply with ONLY the text, no quotes.`,
+        1.0
       );
       const clean = text.replace(/^["']|["']$/g, '').trim().replace(/^i will\s+/i, '').trim();
       await humanType(titleEl, clean.slice(0, 73));
@@ -424,6 +436,18 @@ function injectPage3() {
     toolbar.dataset.faiDone = '1';
     const btn = makeBtn('◆ Generate Description', async (kw) => {
       setMsg('Generating description…', 'info');
+      const hookStyle = pick([
+        'Question the buyer is likely asking themselves, followed by a short confident reassurance. E.g. "Looking for a custom Chrome extension to automate tasks? You\'re in the right place!"',
+        'A bold direct claim about the outcome you deliver, no question mark. E.g. "Your workflow shouldn\'t need 10 manual steps when one Chrome extension can do it."',
+        'A short relatable pain point the buyer has, stated as fact. E.g. "Repetitive browser tasks eat hours every week that a simple extension could save."',
+        'A confident one-line promise of the result, framed as a statement not a question.',
+      ]);
+      const whyStyle = pick([
+        'Start each with action words or adjectives. E.g. "Clean, scalable, well-documented code".',
+        'Start each with a number or concrete specific where possible. E.g. "3+ years building production Chrome extensions".',
+        'Phrase each as a short benefit to the buyer rather than a trait about you. E.g. "You get working code, not just a demo".',
+      ]);
+
       const data = await ask(`Keywords: ${kw}`,
         `Write a Fiverr gig description for: ${kw}. Return ONLY valid JSON with these exact keys:
 {
@@ -435,14 +459,16 @@ function injectPage3() {
   "cta": "..."
 }
 Rules:
-- hook: Question the buyer is asking + "You're in the right place!" — 1 sentence, max 110 chars. E.g. "Looking for a custom Chrome extension to automate tasks? You're in the right place!"
+- hook: ${hookStyle} 1 sentence, max 110 chars.
 - intro: 1-2 sentences about your experience and who you build for. Mention years and client types.
 - develop: exactly 8 specific things you can build/deliver for this niche. Short phrases, 4-8 words each. Diverse and specific to ${kw}.
-- why: exactly 6 short selling points. 4-7 words each. Start with action words or adjectives. E.g. "Clean, scalable, well-documented code", "Fast delivery with clear communication".
+- why: exactly 6 short selling points. 4-7 words each. ${whyStyle}
 - closing: 1-2 sentences wrapping up the offer. Invite them to order.
 - cta: one direct action sentence, 60-80 chars.
 - Weave keywords from: ${kw}
-- Output JSON only, no markdown, no char counts.`
+- Avoid the most predictable, template-sounding phrasing — this should read differently each time it's generated, not like the same gig with nouns swapped.
+- Output JSON only, no markdown, no char counts.`,
+        0.95
       );
 
       let desc;
@@ -497,15 +523,30 @@ Rules:
     faqHeading.dataset.faiDone = '1';
     const btn = makeBtn('◆ Generate FAQs', async (kw) => {
       setMsg('Generating FAQs…', 'info');
+      const concerns = [
+        'How long will my project take? (give a concrete timeline with a reason)',
+        'What if I need changes after delivery? (specific revision policy)',
+        'What do you need from me to get started? (exact requirements)',
+        'What exactly will I receive? (files, formats, source code, documentation etc.)',
+        'Have you done this before? (specific past experience, tools used, numbers if possible)',
+      ].sort(() => Math.random() - 0.5); // shuffle so questions don't always appear in the same order
+
+      const voiceStyle = pick([
+        'Sound confident and direct, short sentences.',
+        'Sound warm and conversational, like a seller who genuinely enjoys the work.',
+        'Sound efficient and no-nonsense, get straight to the specific facts.',
+        'Sound like an experienced expert who has answered this a hundred times, calm and matter-of-fact.',
+      ]);
+
       const raw = await ask(`Keywords: ${kw}`,
         `Write exactly 5 FAQs a real buyer would ask about a Fiverr gig for: ${kw}
 Think like a buyer with a specific concern — not a generic template writer.
-Cover these 5 real buyer concerns:
-1. How long will my project take? (give a concrete timeline with a reason)
-2. What if I need changes after delivery? (specific revision policy)
-3. What do you need from me to get started? (exact requirements)
-4. What exactly will I receive? (files, formats, source code, documentation etc.)
-5. Have you done this before? (specific past experience, tools used, numbers if possible)
+Cover these 5 real buyer concerns, in this order:
+1. ${concerns[0]}
+2. ${concerns[1]}
+3. ${concerns[2]}
+4. ${concerns[3]}
+5. ${concerns[4]}
 Return ONLY valid JSON array:
 [
   { "question": "...", "answer": "..." },
@@ -519,7 +560,10 @@ RULES:
 - Questions: written as the buyer asking, casual and direct (e.g. "How long does it take?", "What do I get?").
 - Answers: confident, personal, first-person. 2 sentences max. 180-240 chars. Use real specifics — tool names, day counts, file types, numbers. Sound like a real seller, not a template.
 - BAD answer: "I will deliver high-quality results in a timely manner." GOOD answer: "Most projects take 3-5 days. I'll send you the full source code, manifest, and a setup guide."
-JSON only, no markdown.`
+- ${voiceStyle}
+- Avoid reusing the most predictable phrasing — vary sentence structure and word choice so this doesn't read like a template filled in with different nouns.
+JSON only, no markdown.`,
+        0.95
       );
       let faqs;
       try { faqs = JSON.parse(raw.match(/\[[\s\S]*\]/)?.[0]); }

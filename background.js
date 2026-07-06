@@ -5,7 +5,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GROQ_REQUEST') {
     chrome.storage.sync.get(['groqKeys', 'groqApiKey', 'model', 'temperature'], (stored) => {
       const storedKeys = stored.groqKeys || (stored.groqApiKey ? [stored.groqApiKey] : []);
-      handleGroqRequest(msg.payload, storedKeys, stored.model, stored.temperature)
+      // Per-call temperature (used for creative fields that need variety) wins over the saved default
+      const temperature = msg.payload.temperature ?? stored.temperature;
+      handleGroqRequest(msg.payload, storedKeys, stored.model, temperature)
         .then(sendResponse)
         .catch(err => sendResponse({ error: err.message }));
     });
